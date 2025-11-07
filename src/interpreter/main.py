@@ -1,1 +1,1 @@
-<main code placeholder>
+print('Syntari main placeholder')

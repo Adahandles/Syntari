@@ -1,1 +1,1 @@
-<lexer code placeholder>
+print('lexer ready')

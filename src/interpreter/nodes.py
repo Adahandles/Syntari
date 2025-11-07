@@ -1,1 +1,1 @@
-<nodes code placeholder>
+print('nodes ready')
