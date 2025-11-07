@@ -1,1 +1,1 @@
-<interpreter code placeholder>
+print('interpreter ready')

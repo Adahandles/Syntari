@@ -1,1 +1,1 @@
-<parser code placeholder>
+print('parser ready')
