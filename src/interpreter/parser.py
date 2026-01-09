@@ -47,30 +47,82 @@ class Parser:
             A list of Token instances in the order they appear in the source.
         """
         tokens: List[Token] = []
-        position = 0
 
-        buffer = []
-        buffer_start = 0
+        length = len(source)
+        i = 0
 
-        def flush_buffer() -> None:
-            nonlocal buffer, buffer_start
-            if not buffer:
-                return
-            text = "".join(buffer)
-            token_type = self._classify_token(text)
-            tokens.append(Token(type=token_type, value=text, position=buffer_start))
-            buffer.clear()
+        # Simple hand-written scanner that distinguishes numbers, identifiers,
+        # string literals, and symbols/operators. This avoids treating an entire
+        # non-whitespace run (e.g. "a==b") as a single token.
+        while i < length:
+            ch = source[i]
 
-        for idx, char in enumerate(source):
-            if char.isspace():
-                flush_buffer()
-                buffer_start = idx + 1
+            # Skip whitespace
+            if ch.isspace():
+                i += 1
+                continue
+
+            start = i
+
+            # Number literal: digits, optionally with a single decimal point.
+            if ch.isdigit() or (ch == "." and i + 1 < length and source[i + 1].isdigit()):
+                i += 1
+                dot_seen = (ch == ".")
+                while i < length:
+                    c = source[i]
+                    if c.isdigit():
+                        i += 1
+                        continue
+                    if c == "." and not dot_seen:
+                        dot_seen = True
+                        i += 1
+                        continue
+                    break
+                text = source[start:i]
+                token_type = self._classify_token(text)
+                tokens.append(Token(type=token_type, value=text, position=start))
+                continue
+
+            # Identifier: letter or underscore followed by letters, digits, or underscores.
+            if ch.isalpha() or ch == "_":
+                i += 1
+                while i < length and (source[i].isalnum() or source[i] == "_"):
+                    i += 1
+                text = source[start:i]
+                token_type = self._classify_token(text)
+                tokens.append(Token(type=token_type, value=text, position=start))
+                continue
+
+            # String literal: text enclosed in single or double quotes, with simple escape handling.
+            if ch == '"' or ch == "'":
+                quote_char = ch
+                i += 1
+                escaped = False
+                while i < length:
+                    c = source[i]
+                    if escaped:
+                        escaped = False
+                    elif c == "\\":
+                        escaped = True
+                    elif c == quote_char:
+                        i += 1
+                        break
+                    i += 1
+                text = source[start:i]
+                token_type = self._classify_token(text)
+                tokens.append(Token(type=token_type, value=text, position=start))
+                continue
+
+            # Symbols / operators. Recognize a few common two-character operators,
+            # otherwise fall back to single-character symbols.
+            two_char_ops = ("==", "!=", ">=", "<=")
+            if i + 1 < length and source[i:i + 2] in two_char_ops:
+                i += 2
             else:
-                if not buffer:
-                    buffer_start = idx
-                buffer.append(char)
-
-        flush_buffer()
+                i += 1
+            text = source[start:i]
+            token_type = self._classify_token(text)
+            tokens.append(Token(type=token_type, value=text, position=start))
         return tokens
 
     def _classify_token(self, text: str) -> str:
