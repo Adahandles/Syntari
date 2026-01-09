@@ -7,6 +7,10 @@ import re
 class Token:
     """
     Represents a single token produced by the Parser.
+    
+    Note: This is a simplified Token class used by the Parser for basic tokenization.
+    It differs from lexer.Token which includes line/column tracking for detailed
+    error reporting. Use lexer.Token for full lexical analysis.
 
     Attributes:
         type: A string describing the token type (e.g. 'NUMBER', 'IDENT', 'SYMBOL').

@@ -16,7 +16,12 @@ from typing import Iterable, List
 
 @dataclass(frozen=True)
 class Token:
-    """Represents a single lexical token."""
+    """
+    Represents a single lexical token with detailed position tracking.
+    
+    This Token class is used for full lexical analysis and includes line/column
+    information for precise error reporting. For basic tokenization, see parser.Token.
+    """
 
     type: str
     value: str
@@ -93,7 +98,10 @@ def lex(source: str) -> List[Token]:
 
 def tokenize(source: str) -> List[Token]:
     """
-    Alias for lex() to maintain compatibility with existing code.
+    Alias for lex() for compatibility with bytecode compiler.
+    
+    The bytecode compiler expects a tokenize() function from the lexer module.
+    This function provides that interface while delegating to lex().
     
     Args:
         source: The input string to tokenize.
