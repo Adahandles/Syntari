@@ -1,0 +1,36 @@
+// Control flow examples
+
+// If statement
+let x = 15
+
+if (x > 10) {
+    print("x is greater than 10")
+}
+
+// If-else
+let age = 18
+
+if (age >= 18) {
+    print("You are an adult")
+} else {
+    print("You are a minor")
+}
+
+// While loop
+let i = 0
+let sum = 0
+
+while (i < 10) {
+    sum = sum + i
+    i = i + 1
+}
+
+print("Sum of 0-9:", sum)
+
+// Countdown
+let countdown = 5
+while (countdown > 0) {
+    print("Countdown:", countdown)
+    countdown = countdown - 1
+}
+print("Liftoff!")
