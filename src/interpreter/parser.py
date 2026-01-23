@@ -81,6 +81,13 @@ class Parser:
         if self._match(TokenType.RETURN):
             return self._parse_return_stmt()
         
+        # Error handling
+        if self._match(TokenType.TRY):
+            return self._parse_try_stmt()
+        
+        if self._match(TokenType.THROW):
+            return self._parse_throw_stmt()
+        
         # Expression statement
         return self._parse_expr_stmt()
     
@@ -324,6 +331,51 @@ class Parser:
         
         self._match(TokenType.SEMICOLON)  # Optional semicolon
         return ReturnStmt(value)
+    
+    def _parse_try_stmt(self) -> 'TryStmt':
+        """Parse try-catch-finally statement"""
+        # Parse try block
+        try_block = self._parse_block()
+        
+        # Parse catch clauses
+        catch_clauses = []
+        while self._match(TokenType.CATCH):
+            exception_var = None
+            exception_type = None
+            
+            # Parse optional (var: Type) or (var) or just {}
+            if self._match(TokenType.LPAREN):
+                if self._check(TokenType.IDENTIFIER):
+                    exception_var = self._advance().value
+                    
+                    # Check for type annotation
+                    if self._match(TokenType.COLON):
+                        if self._check(TokenType.IDENTIFIER):
+                            exception_type = self._advance().value
+                
+                self._consume(TokenType.RPAREN, "Expected ')' after catch parameter")
+            
+            # Parse catch block
+            catch_block = self._parse_block()
+            
+            catch_clauses.append(CatchClause(exception_var, exception_type, catch_block))
+        
+        # Parse optional finally block
+        finally_block = None
+        if self._match(TokenType.FINALLY):
+            finally_block = self._parse_block()
+        
+        # Must have at least one catch or finally
+        if not catch_clauses and not finally_block:
+            raise ParseError("Try statement must have at least one catch or finally block", self._previous())
+        
+        return TryStmt(try_block, catch_clauses, finally_block)
+    
+    def _parse_throw_stmt(self) -> 'ThrowStmt':
+        """Parse throw statement: throw expr"""
+        expr = self._parse_expression()
+        self._match(TokenType.SEMICOLON)  # Optional semicolon
+        return ThrowStmt(expr)
     
     def _parse_expr_stmt(self) -> ExprStmt:
         """Parse expression statement"""

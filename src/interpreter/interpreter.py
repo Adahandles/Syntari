@@ -15,6 +15,14 @@ class RuntimeError(Exception):
         super().__init__(f"Runtime error: {message}")
 
 
+class SyntariException(Exception):
+    """User-thrown exception in Syntari code"""
+    def __init__(self, value: Any, exception_type: str = "Exception"):
+        self.value = value
+        self.exception_type = exception_type
+        super().__init__(f"{exception_type}: {value}")
+
+
 class ReturnValue(Exception):
     """Exception used to implement return statements"""
     def __init__(self, value: Any):
@@ -314,6 +322,82 @@ class Interpreter:
                 return self._execute(case_block)
         
         return None
+    
+    # Error Handling
+    def visit_TryStmt(self, node: TryStmt) -> Any:
+        """Visit try-catch-finally statement"""
+        exception_caught = False
+        result = None
+        
+        try:
+            # Execute try block
+            result = self._execute(node.try_block)
+        except SyntariException as e:
+            # Check each catch clause
+            for catch_clause in node.catch_clauses:
+                # Check if exception type matches (if specified)
+                if catch_clause.exception_type is None or catch_clause.exception_type == e.exception_type:
+                    # Bind exception to variable if specified
+                    if catch_clause.exception_var:
+                        # Create new scope for catch block
+                        catch_env = Environment(self.environment)
+                        catch_env.define(catch_clause.exception_var, e.value)
+                        self.environment = catch_env
+                    
+                    try:
+                        result = self._execute(catch_clause.block)
+                        exception_caught = True
+                    finally:
+                        # Restore environment
+                        if catch_clause.exception_var:
+                            self.environment = self.environment.parent
+                    
+                    break  # Stop after first matching catch
+            
+            # Re-raise if not caught
+            if not exception_caught:
+                raise
+        except RuntimeError as e:
+            # Wrap runtime errors as Syntari exceptions for catch blocks
+            syntari_exc = SyntariException(e.message, "RuntimeError")
+            
+            for catch_clause in node.catch_clauses:
+                if catch_clause.exception_type is None or catch_clause.exception_type == "RuntimeError":
+                    if catch_clause.exception_var:
+                        catch_env = Environment(self.environment)
+                        catch_env.define(catch_clause.exception_var, e.message)
+                        self.environment = catch_env
+                    
+                    try:
+                        result = self._execute(catch_clause.block)
+                        exception_caught = True
+                    finally:
+                        if catch_clause.exception_var:
+                            self.environment = self.environment.parent
+                    
+                    break
+            
+            if not exception_caught:
+                raise
+        finally:
+            # Always execute finally block if present
+            if node.finally_block:
+                self._execute(node.finally_block)
+        
+        return result
+    
+    def visit_CatchClause(self, node: CatchClause) -> Any:
+        """Visit catch clause - should not be visited directly"""
+        raise RuntimeError("CatchClause should not be visited directly")
+    
+    def visit_ThrowStmt(self, node: ThrowStmt) -> None:
+        """Visit throw statement"""
+        value = self._evaluate(node.expr)
+        # Determine exception type from value
+        exception_type = "Exception"
+        if isinstance(value, str):
+            exception_type = "Exception"
+        raise SyntariException(value, exception_type)
     
     # Functions
     def visit_FuncDecl(self, node: FuncDecl) -> None:

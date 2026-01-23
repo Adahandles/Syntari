@@ -24,6 +24,10 @@ class TokenType(Enum):
     RETURN = auto()
     TRUE = auto()
     FALSE = auto()
+    TRY = auto()
+    CATCH = auto()
+    FINALLY = auto()
+    THROW = auto()
     
     # Literals
     INTEGER = auto()
@@ -103,6 +107,10 @@ class Lexer:
         'return': TokenType.RETURN,
         'true': TokenType.TRUE,
         'false': TokenType.FALSE,
+        'try': TokenType.TRY,
+        'catch': TokenType.CATCH,
+        'finally': TokenType.FINALLY,
+        'throw': TokenType.THROW,
     }
     
     def __init__(self, source: str):

@@ -193,6 +193,40 @@ class MatchStmt(Node):
         return f"MatchStmt({len(self.cases)} cases)"
 
 
+# Error Handling
+@dataclass
+class TryStmt(Node):
+    """Try-catch-finally statement"""
+    try_block: Node  # Block node
+    catch_clauses: List['CatchClause']  # List of catch clauses
+    finally_block: Optional[Node]  # Optional finally block
+    
+    def __repr__(self):
+        return f"TryStmt({len(self.catch_clauses)} catch clauses, finally={self.finally_block is not None})"
+
+
+@dataclass
+class CatchClause(Node):
+    """Catch clause with exception variable and handler block"""
+    exception_var: Optional[str]  # Variable name to bind exception (can be None)
+    exception_type: Optional[str]  # Type of exception to catch (None = catch all)
+    block: Node  # Handler block
+    
+    def __repr__(self):
+        var_str = self.exception_var if self.exception_var else "anonymous"
+        type_str = f": {self.exception_type}" if self.exception_type else ""
+        return f"CatchClause({var_str}{type_str})"
+
+
+@dataclass
+class ThrowStmt(Node):
+    """Throw statement to raise an exception"""
+    expr: Node  # Expression to throw
+    
+    def __repr__(self):
+        return f"ThrowStmt()"
+
+
 # Functions
 @dataclass
 class Param(Node):

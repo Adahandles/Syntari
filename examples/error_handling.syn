@@ -1,0 +1,99 @@
+// Error Handling Example
+// Demonstrates try/catch/finally and throw statements
+
+// Example 1: Basic try-catch
+print("=== Example 1: Basic try-catch ===");
+try {
+    print("About to throw an error...");
+    throw "Something went wrong!";
+    print("This line will not execute");
+} catch (e) {
+    print("Caught error:");
+    print(e);
+}
+print("Program continues after exception");
+print("");
+
+// Example 2: Try-catch with finally
+print("=== Example 2: Try-catch-finally ===");
+let cleanup = false;
+try {
+    print("Executing try block");
+    throw "Error in try block";
+} catch (err) {
+    print("Handling error:");
+    print(err);
+} finally {
+    print("Finally block always executes");
+    cleanup = true;
+}
+print("Cleanup status:");
+print(cleanup);
+print("");
+
+// Example 3: Nested try-catch
+print("=== Example 3: Nested try-catch ===");
+try {
+    print("Outer try");
+    try {
+        print("Inner try");
+        throw "Inner error";
+    } catch (inner) {
+        print("Caught inner error:");
+        print(inner);
+        throw "Re-throwing as outer error";
+    }
+} catch (outer) {
+    print("Caught outer error:");
+    print(outer);
+}
+print("");
+
+// Example 4: Exception with expressions
+print("=== Example 4: Throwing expressions ===");
+let x = 10;
+let y = 5;
+try {
+    if (y == 0) {
+        throw "Division by zero!";
+    }
+    let result = x + y;
+    throw result;
+} catch (val) {
+    print("Caught value:");
+    print(val);
+}
+print("");
+
+// Example 5: Finally without catch
+print("=== Example 5: Finally without catch ===");
+let step = 0;
+try {
+    step = 1;
+    print("Try block executed");
+    step = 2;
+} finally {
+    step = 3;
+    print("Finally executed");
+}
+print("Final step:");
+print(step);
+print("");
+
+// Example 6: Exception stops execution
+print("=== Example 6: Exception stops execution ===");
+let counter = 0;
+try {
+    counter = counter + 1;
+    print("Counter:");
+    print(counter);
+    throw "Stop here";
+    counter = counter + 1;  // This won't execute
+    print("This won't print");
+} catch (e) {
+    print("Final counter:");
+    print(counter);  // Should be 1, not 2
+}
+print("");
+
+print("=== All error handling examples completed ===");
