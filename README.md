@@ -82,6 +82,20 @@ This code prints a greeting and asks the AI to describe itself.
 
 ---
 
+## 🚀 Development Planning & Next Steps
+
+**New to the project?** Start here:
+
+- **[DEVELOPMENT_SUMMARY.md](DEVELOPMENT_SUMMARY.md)** - 📋 Executive summary and quick start guide
+- **[ROADMAP_VISUAL.md](ROADMAP_VISUAL.md)** - 🎯 Visual roadmap with timelines and dependencies
+- **[ACTION_ITEMS.md](ACTION_ITEMS.md)** - ✅ Prioritized 2-week task breakdown
+- **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** - 🔧 Code examples and step-by-step tutorials
+- **[NEXT_STEPS.md](NEXT_STEPS.md)** - 📚 Comprehensive strategic planning document
+
+**Current Status:** v0.3 in progress - Core interpreter components need implementation. See planning docs above for details.
+
+---
+
 ## Legal Notice
 
 Syntari is proprietary software owned by **DeuOS, LLC**.  
