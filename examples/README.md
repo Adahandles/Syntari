@@ -49,6 +49,31 @@ Control flow structures:
 - `while` loops
 - Conditional logic
 
+### error_handling.syn (v0.4)
+Exception handling and error management:
+- `try-catch-finally` blocks
+- `throw` statements
+- Custom exceptions
+- Error propagation
+- Nested error handling
+
+### classes.syn (v0.4)
+Object-oriented programming:
+- Class definitions
+- Constructors
+- Properties and methods
+- `this` keyword
+- Object instantiation with `new`
+- Multiple instances
+
+### networking.syn (v0.4)
+HTTP client and networking:
+- HTTP GET, POST, PUT, DELETE requests
+- Response handling with status codes
+- Error handling for network failures
+- WebSocket stub (full support in future release)
+- Module.function syntax (net.get, net.post, etc.)
+
 ## Interactive REPL
 
 Start the interactive REPL:
@@ -68,13 +93,21 @@ exit
 
 ## Language Features Demonstrated
 
+### v0.3 Features
 - **Variables**: `let` and `const` declarations
 - **Data Types**: Numbers (int/float), strings, booleans
 - **Operators**: Arithmetic (+, -, *, /, %), comparison (<, <=, >, >=, ==, !=), logical (&&, ||, !)
 - **Functions**: Declaration, parameters, return values, recursion
 - **Control Flow**: if/else, while loops
-- **Built-in Functions**: print(), time()
+- **Built-in Functions**: print(), time(), input(), trace(), exit()
 - **Comments**: Single-line (//) and multi-line (/* */)
+
+### v0.4 Features
+- **Error Handling**: try-catch-finally blocks, throw statements, custom exceptions
+- **Classes/OOP**: Class definitions, constructors, methods, properties, `new`, `this`
+- **Networking**: HTTP client (net.get, net.post, net.put, net.delete), response handling
+- **Module Functions**: Module.function syntax (ai.query, net.get, etc.)
+- **Dictionary Access**: Member access on dictionaries (response.ok, response.status)
 
 ## Next Steps
 
