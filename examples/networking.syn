@@ -1,0 +1,62 @@
+// Syntari Networking Example - v0.4
+// Demonstrates HTTP client functionality
+
+print("=== Syntari Networking Demo ===");
+print("");
+
+// Example 1: HTTP GET request
+print("1. HTTP GET Request Example");
+print("Fetching data from JSONPlaceholder API...");
+
+let response = net.get("https://jsonplaceholder.typicode.com/posts/1");
+
+if (response.ok) {
+    print("Success! Status:", response.status);
+    print("Response preview:", response.body);
+} else {
+    print("Error:", response.error);
+}
+
+print("");
+
+// Example 2: Error handling with invalid URL
+print("2. Error Handling Example");
+print("Attempting to fetch from invalid domain...");
+
+let bad_response = net.get("https://this-domain-definitely-does-not-exist-12345.com");
+if (!bad_response.ok) {
+    print("Request failed (expected)");
+    print("Error message:", bad_response.error);
+}
+
+print("");
+
+// Example 3: WebSocket (stub in v0.4)
+print("3. WebSocket Example (Stub)");
+print("Attempting WebSocket connection...");
+
+let ws_result = net.ws("wss://echo.websocket.org");
+if (!ws_result.ok) {
+    print("WebSocket not yet implemented");
+    print("Status:", ws_result.error);
+    print("Info:", ws_result.message);
+}
+
+print("");
+print("=== Networking Demo Complete ===");
+print("");
+print("Note: This demo uses the JSONPlaceholder API");
+print("(https://jsonplaceholder.typicode.com)");
+print("which is a free fake REST API for testing.");
+print("");
+print("Key Features:");
+print("- HTTP GET requests");
+print("- Response handling with status codes");
+print("- Error handling for network failures");
+print("- WebSocket stub (full support in future release)");
+print("");
+print("POST, PUT, DELETE methods are also available:");
+print("  net.post(url, data)");
+print("  net.put(url, data)");
+print("  net.delete(url)");
+

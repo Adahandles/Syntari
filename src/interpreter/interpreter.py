@@ -4,7 +4,7 @@ Syntari Interpreter - Executes Abstract Syntax Tree for v0.3
 
 from typing import Any, Dict, List, Optional
 from src.interpreter.nodes import *
-from src.core import system, ai
+from src.core import system, ai, net
 
 
 class RuntimeError(Exception):
@@ -287,6 +287,25 @@ class Interpreter:
             elif node.callee == 'ai.suggest':
                 return ai.suggest()
             
+            # Networking module functions
+            elif node.callee == 'net.get':
+                url = args[0] if args else ''
+                return net.net_get(url)
+            elif node.callee == 'net.post':
+                url = args[0] if args else ''
+                data = args[1] if len(args) > 1 else {}
+                return net.net_post(url, data)
+            elif node.callee == 'net.put':
+                url = args[0] if args else ''
+                data = args[1] if len(args) > 1 else {}
+                return net.net_put(url, data)
+            elif node.callee == 'net.delete':
+                url = args[0] if args else ''
+                return net.net_delete(url)
+            elif node.callee == 'net.ws':
+                url = args[0] if args else ''
+                return net.net_ws(url)
+            
             # User-defined functions
             elif node.callee in self.functions:
                 func = self.functions[node.callee]
@@ -297,6 +316,47 @@ class Interpreter:
         
         # Handle node callees (e.g., MemberAccess for method calls)
         else:
+            # Check if it's a MemberAccess for module functions
+            if isinstance(node.callee, MemberAccess):
+                obj = node.callee.object
+                member = node.callee.member
+                
+                # Handle module.function calls
+                if isinstance(obj, Var):
+                    module_name = obj.name
+                    
+                    # AI module
+                    if module_name == 'ai':
+                        if member == 'query':
+                            prompt = args[0] if args else ''
+                            return ai.query(prompt)
+                        elif member == 'eval':
+                            code = args[0] if args else ''
+                            return ai.eval(code)
+                        elif member == 'suggest':
+                            return ai.suggest()
+                    
+                    # Networking module
+                    elif module_name == 'net':
+                        if member == 'get':
+                            url = args[0] if args else ''
+                            return net.net_get(url)
+                        elif member == 'post':
+                            url = args[0] if args else ''
+                            data = args[1] if len(args) > 1 else {}
+                            return net.net_post(url, data)
+                        elif member == 'put':
+                            url = args[0] if args else ''
+                            data = args[1] if len(args) > 1 else {}
+                            return net.net_put(url, data)
+                        elif member == 'delete':
+                            url = args[0] if args else ''
+                            return net.net_delete(url)
+                        elif member == 'ws':
+                            url = args[0] if args else ''
+                            return net.net_ws(url)
+            
+            # Try to evaluate the callee
             callee = self._evaluate(node.callee)
             
             # If it's a bound method, call it
@@ -519,6 +579,14 @@ class Interpreter:
         """Visit member access"""
         obj = self._evaluate(node.object)
         
+        # Handle dictionaries (for networking responses, etc.)
+        if isinstance(obj, dict):
+            if node.member in obj:
+                return obj[node.member]
+            else:
+                raise RuntimeError(f"Dictionary has no key: {node.member}")
+        
+        # Handle class instances
         if not isinstance(obj, ClassInstance):
             raise RuntimeError(f"Cannot access member '{node.member}' on non-object")
         
