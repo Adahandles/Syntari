@@ -29,6 +29,49 @@ class ReturnValue(Exception):
         self.value = value
 
 
+class SyntariClass:
+    """Represents a class definition"""
+    def __init__(self, class_node: 'ClassDecl', enclosing_env: 'Environment'):
+        self.class_node = class_node
+        self.enclosing_env = enclosing_env
+    
+    def __repr__(self):
+        return f"<class {self.class_node.name}>"
+
+
+class ClassInstance:
+    """Represents an instance of a class"""
+    def __init__(self, class_def: SyntariClass):
+        self.class_def = class_def
+        self.properties: Dict[str, Any] = {}
+        
+        # Initialize properties with default values
+        for prop in class_def.class_node.properties:
+            if prop.initializer:
+                # We'll evaluate initializers when they're accessed
+                self.properties[prop.name] = None
+            else:
+                self.properties[prop.name] = None
+    
+    def __repr__(self):
+        return f"<{self.class_def.class_node.name} instance>"
+
+
+class BoundMethod:
+    """Represents a method bound to an instance"""
+    def __init__(self, instance: ClassInstance, method: 'MethodDecl', interpreter: 'Interpreter'):
+        self.instance = instance
+        self.method = method
+        self.interpreter = interpreter
+    
+    def __call__(self, *args):
+        """Call the bound method"""
+        return self.interpreter._call_method(self.instance, self.method, list(args))
+    
+    def __repr__(self):
+        return f"<bound method {self.method.name}>"
+
+
 class Environment:
     """Variable environment with scope support"""
     
@@ -216,39 +259,51 @@ class Interpreter:
         # Evaluate arguments
         args = [self._evaluate(arg) for arg in node.args]
         
-        # Built-in functions
-        if node.callee == 'print':
-            system.print(*args)
-            return None
-        elif node.callee == 'input':
-            prompt = args[0] if args else ''
-            return system.input(prompt)
-        elif node.callee == 'time':
-            return system.time()
-        elif node.callee == 'exit':
-            code = args[0] if args else 0
-            system.exit(code)
-        elif node.callee == 'trace':
-            system.trace()
-            return None
+        # Handle string callees (simple function names)
+        if isinstance(node.callee, str):
+            # Built-in functions
+            if node.callee == 'print':
+                system.print(*args)
+                return None
+            elif node.callee == 'input':
+                prompt = args[0] if args else ''
+                return system.input(prompt)
+            elif node.callee == 'time':
+                return system.time()
+            elif node.callee == 'exit':
+                code = args[0] if args else 0
+                system.exit(code)
+            elif node.callee == 'trace':
+                system.trace()
+                return None
+            
+            # AI module functions
+            elif node.callee == 'ai.query':
+                prompt = args[0] if args else ''
+                return ai.query(prompt)
+            elif node.callee == 'ai.eval':
+                code = args[0] if args else ''
+                return ai.eval(code)
+            elif node.callee == 'ai.suggest':
+                return ai.suggest()
+            
+            # User-defined functions
+            elif node.callee in self.functions:
+                func = self.functions[node.callee]
+                return self._call_function(func, args)
+            
+            else:
+                raise RuntimeError(f"Undefined function: {node.callee}", node)
         
-        # AI module functions
-        elif node.callee == 'ai.query':
-            prompt = args[0] if args else ''
-            return ai.query(prompt)
-        elif node.callee == 'ai.eval':
-            code = args[0] if args else ''
-            return ai.eval(code)
-        elif node.callee == 'ai.suggest':
-            return ai.suggest()
-        
-        # User-defined functions
-        elif node.callee in self.functions:
-            func = self.functions[node.callee]
-            return self._call_function(func, args)
-        
+        # Handle node callees (e.g., MemberAccess for method calls)
         else:
-            raise RuntimeError(f"Undefined function: {node.callee}", node)
+            callee = self._evaluate(node.callee)
+            
+            # If it's a bound method, call it
+            if isinstance(callee, BoundMethod):
+                return callee(*args)
+            
+            raise RuntimeError(f"Cannot call non-callable value", node)
     
     def _call_function(self, func: FuncDecl, args: List[Any]) -> Any:
         """Call a user-defined function"""
@@ -404,6 +459,118 @@ class Interpreter:
         """Visit function declaration"""
         self.functions[node.name] = node
         return None
+    
+    # Classes and OOP
+    def visit_ClassDecl(self, node: 'ClassDecl') -> None:
+        """Visit class declaration"""
+        # Store class definition
+        self.environment.define(node.name, SyntariClass(node, self.environment))
+        return None
+    
+    def visit_NewExpr(self, node: 'NewExpr') -> Any:
+        """Visit new expression - create instance"""
+        # Get class definition
+        try:
+            class_def = self.environment.get(node.class_name)
+        except RuntimeError:
+            raise RuntimeError(f"Undefined class: {node.class_name}")
+        
+        if not isinstance(class_def, SyntariClass):
+            raise RuntimeError(f"{node.class_name} is not a class")
+        
+        # Create instance
+        instance = ClassInstance(class_def)
+        
+        # Initialize properties with their default values
+        for prop in class_def.class_node.properties:
+            if prop.initializer:
+                # Evaluate the initializer expression
+                value = self._evaluate(prop.initializer)
+                instance.properties[prop.name] = value
+        
+        # Call constructor if it exists
+        if class_def.class_node.constructor:
+            # Evaluate constructor arguments
+            args = [self._evaluate(arg) for arg in node.args]
+            
+            # Call constructor method
+            constructor = class_def.class_node.constructor
+            self._call_method(instance, constructor, args)
+        
+        return instance
+    
+    def visit_ThisExpr(self, node: 'ThisExpr') -> Any:
+        """Visit this expression"""
+        # Get 'this' from environment
+        try:
+            return self.environment.get('this')
+        except RuntimeError:
+            raise RuntimeError("'this' used outside of class context")
+    
+    def visit_SuperExpr(self, node: 'SuperExpr') -> Any:
+        """Visit super expression"""
+        # Get super class from environment
+        try:
+            return self.environment.get('super')
+        except RuntimeError:
+            raise RuntimeError("'super' used outside of class context")
+    
+    def visit_MemberAccess(self, node: 'MemberAccess') -> Any:
+        """Visit member access"""
+        obj = self._evaluate(node.object)
+        
+        if not isinstance(obj, ClassInstance):
+            raise RuntimeError(f"Cannot access member '{node.member}' on non-object")
+        
+        # Get property value
+        if node.member in obj.properties:
+            return obj.properties[node.member]
+        
+        # Get method (bound to instance)
+        for method in obj.class_def.class_node.methods:
+            if method.name == node.member:
+                # Return a bound method (closure that remembers 'this')
+                return BoundMethod(obj, method, self)
+        
+        raise RuntimeError(f"Undefined property or method: {node.member}")
+    
+    def visit_MemberAssign(self, node: 'MemberAssign') -> Any:
+        """Visit member assignment"""
+        obj = self._evaluate(node.object)
+        
+        if not isinstance(obj, ClassInstance):
+            raise RuntimeError(f"Cannot assign to member '{node.member}' on non-object")
+        
+        value = self._evaluate(node.value)
+        obj.properties[node.member] = value
+        return value
+    
+    def _call_method(self, instance: 'ClassInstance', method: 'MethodDecl', args: List[Any]) -> Any:
+        """Call a method on an instance"""
+        # Create new environment for method
+        method_env = Environment(instance.class_def.enclosing_env)
+        
+        # Bind 'this' to the instance
+        method_env.define('this', instance)
+        
+        # Bind parameters
+        for i, param in enumerate(method.params):
+            if i < len(args):
+                method_env.define(param.name, args[i])
+            else:
+                method_env.define(param.name, None)
+        
+        # Execute method body
+        previous_env = self.environment
+        self.environment = method_env
+        
+        try:
+            self._execute(method.body)
+            return None
+        except ReturnValue as ret:
+            return ret.value
+        finally:
+            self.environment = previous_env
     
     # Imports
     def visit_ImportDecl(self, node: ImportDecl) -> None:

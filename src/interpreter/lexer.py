@@ -28,6 +28,12 @@ class TokenType(Enum):
     CATCH = auto()
     FINALLY = auto()
     THROW = auto()
+    CLASS = auto()
+    NEW = auto()
+    THIS = auto()
+    SUPER = auto()
+    EXTENDS = auto()
+    STATIC = auto()
     
     # Literals
     INTEGER = auto()
@@ -111,6 +117,12 @@ class Lexer:
         'catch': TokenType.CATCH,
         'finally': TokenType.FINALLY,
         'throw': TokenType.THROW,
+        'class': TokenType.CLASS,
+        'new': TokenType.NEW,
+        'this': TokenType.THIS,
+        'super': TokenType.SUPER,
+        'extends': TokenType.EXTENDS,
+        'static': TokenType.STATIC,
     }
     
     def __init__(self, source: str):

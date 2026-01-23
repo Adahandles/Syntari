@@ -55,6 +55,10 @@ class Parser:
         if self._check(TokenType.IMPL):
             return self._parse_impl_decl()
         
+        # Class declarations
+        if self._check(TokenType.CLASS):
+            return self._parse_class_decl()
+        
         # Function declarations
         if self._check(TokenType.FN):
             return self._parse_func_decl()
@@ -204,6 +208,77 @@ class Parser:
         
         body = self._parse_block()
         return FuncDecl(name, params, return_type, body)
+    
+    def _parse_class_decl(self) -> 'ClassDecl':
+        """Parse class declaration: class MyClass extends BaseClass { ... }"""
+        self._consume(TokenType.CLASS, "Expected 'class'")
+        name = self._consume(TokenType.IDENTIFIER, "Expected class name").value
+        
+        # Optional extends clause
+        super_class = None
+        if self._match(TokenType.EXTENDS):
+            super_class = self._consume(TokenType.IDENTIFIER, "Expected parent class name").value
+        
+        self._consume(TokenType.LBRACE, "Expected '{' after class declaration")
+        
+        methods = []
+        properties = []
+        constructor = None
+        
+        while not self._check(TokenType.RBRACE) and not self._is_at_end():
+            is_static = False
+            if self._match(TokenType.STATIC):
+                is_static = True
+            
+            # Check if it's a method (has fn keyword) or property
+            if self._check(TokenType.FN):
+                method = self._parse_method_decl(is_static)
+                if method.name == "constructor":
+                    constructor = method
+                else:
+                    methods.append(method)
+            elif self._check(TokenType.IDENTIFIER):
+                prop = self._parse_property_decl(is_static)
+                properties.append(prop)
+            else:
+                raise ParseError("Expected method or property declaration", self._peek())
+        
+        self._consume(TokenType.RBRACE, "Expected '}' after class body")
+        return ClassDecl(name, super_class, methods, properties, constructor)
+    
+    def _parse_method_decl(self, is_static: bool = False) -> 'MethodDecl':
+        """Parse method declaration within a class"""
+        self._consume(TokenType.FN, "Expected 'fn'")
+        name = self._consume(TokenType.IDENTIFIER, "Expected method name").value
+        
+        self._consume(TokenType.LPAREN, "Expected '('")
+        params = self._parse_param_list()
+        self._consume(TokenType.RPAREN, "Expected ')'")
+        
+        # Optional return type
+        return_type = None
+        if self._match(TokenType.ARROW):
+            return_type = self._consume(TokenType.IDENTIFIER, "Expected return type").value
+        
+        body = self._parse_block()
+        return MethodDecl(name, params, return_type, body, is_static)
+    
+    def _parse_property_decl(self, is_static: bool = False) -> 'PropertyDecl':
+        """Parse property declaration within a class"""
+        name = self._consume(TokenType.IDENTIFIER, "Expected property name").value
+        
+        # Optional type annotation
+        type_ref = None
+        if self._match(TokenType.COLON):
+            type_ref = self._consume(TokenType.IDENTIFIER, "Expected type").value
+        
+        # Optional initializer
+        initializer = None
+        if self._match(TokenType.EQ):
+            initializer = self._parse_expression()
+        
+        self._match(TokenType.SEMICOLON)  # Optional semicolon
+        return PropertyDecl(name, type_ref, initializer, is_static)
     
     def _parse_param_list(self) -> List[Param]:
         """Parse parameter list: a: int, b: int"""
@@ -390,13 +465,16 @@ class Parser:
         return self._parse_assignment()
     
     def _parse_assignment(self) -> Node:
-        """Parse assignment: x = expr"""
+        """Parse assignment: x = expr or obj.member = expr"""
         expr = self._parse_logical_or()
         
         if self._match(TokenType.EQ):
+            value = self._parse_assignment()
+            
             if isinstance(expr, Var):
-                value = self._parse_assignment()
                 return VarAssign(expr.name, value)
+            elif isinstance(expr, MemberAccess):
+                return MemberAssign(expr.object, expr.member, value)
             else:
                 raise ParseError("Invalid assignment target", self._previous())
         
@@ -478,26 +556,26 @@ class Parser:
         return self._parse_call()
     
     def _parse_call(self) -> Node:
-        """Parse function call: func(args)"""
+        """Parse function call and member access: func(args) or obj.member or obj.method(args)"""
         expr = self._parse_primary()
         
         while True:
             if self._match(TokenType.LPAREN):
                 expr = self._finish_call(expr)
             elif self._match(TokenType.DOT):
-                # Method call (simplified)
-                method_name = self._consume(TokenType.IDENTIFIER, "Expected method name").value
+                # Member access or method call
+                member_name = self._consume(TokenType.IDENTIFIER, "Expected member name after '.'").value
+                
                 if self._match(TokenType.LPAREN):
+                    # Method call: obj.method(args)
                     args = self._parse_arg_list()
                     self._consume(TokenType.RPAREN, "Expected ')' after arguments")
-                    # For now, represent as a call with object.method syntax
-                    if isinstance(expr, Var):
-                        callee = f"{expr.name}.{method_name}"
-                        expr = Call(callee, args)
-                    else:
-                        raise ParseError("Method calls only supported on variables", self._previous())
+                    # Create member access for the method, then call it
+                    member_expr = MemberAccess(expr, member_name)
+                    expr = Call(member_expr, args)
                 else:
-                    raise ParseError("Expected '(' after method name", self._peek())
+                    # Property access: obj.property
+                    expr = MemberAccess(expr, member_name)
             else:
                 break
         
@@ -505,13 +583,15 @@ class Parser:
     
     def _finish_call(self, callee: Node) -> Call:
         """Finish parsing function call"""
-        if not isinstance(callee, Var):
-            raise ParseError("Only identifiers can be called", self._previous())
-        
+        # Allow calling identifiers, member access expressions, etc.
         args = self._parse_arg_list()
         self._consume(TokenType.RPAREN, "Expected ')' after arguments")
         
-        return Call(callee.name, args)
+        # For simple identifiers, extract the name
+        if isinstance(callee, Var):
+            return Call(callee.name, args)
+        # For member access or other expressions, pass the node directly
+        return Call(callee, args)
     
     def _parse_arg_list(self) -> List[Node]:
         """Parse argument list"""
@@ -544,6 +624,20 @@ class Parser:
         if self._match(TokenType.STRING):
             return String(self._previous().value)
         
+        # New expression
+        if self._match(TokenType.NEW):
+            return self._parse_new_expr()
+        
+        # This expression
+        if self._match(TokenType.THIS):
+            return ThisExpr()
+        
+        # Super expression - needs method name
+        if self._match(TokenType.SUPER):
+            self._consume(TokenType.DOT, "Expected '.' after 'super'")
+            method_name = self._consume(TokenType.IDENTIFIER, "Expected method name").value
+            return SuperExpr(method_name)
+        
         # Identifiers
         if self._match(TokenType.IDENTIFIER):
             return Var(self._previous().value)
@@ -555,6 +649,21 @@ class Parser:
             return expr
         
         raise ParseError(f"Unexpected token: {self._peek().type.name}", self._peek())
+    
+    def _parse_new_expr(self) -> 'NewExpr':
+        """Parse new expression: new ClassName(args)"""
+        class_name = self._consume(TokenType.IDENTIFIER, "Expected class name after 'new'").value
+        
+        self._consume(TokenType.LPAREN, "Expected '(' after class name")
+        args = []
+        
+        if not self._check(TokenType.RPAREN):
+            args.append(self._parse_expression())
+            while self._match(TokenType.COMMA):
+                args.append(self._parse_expression())
+        
+        self._consume(TokenType.RPAREN, "Expected ')' after arguments")
+        return NewExpr(class_name, args)
     
     # === Helper Methods ===
     

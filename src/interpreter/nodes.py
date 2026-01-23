@@ -100,6 +100,17 @@ class VarAssign(Node):
         return f"VarAssign({self.name} = ...)"
 
 
+@dataclass
+class MemberAssign(Node):
+    """Member assignment (object.property = value)"""
+    object: Node  # Object being assigned to
+    member: str  # Member name
+    value: Node  # Value being assigned
+    
+    def __repr__(self):
+        return f"MemberAssign(..., {self.member} = ...)"
+
+
 # Expressions
 @dataclass
 class BinOp(Node):
@@ -250,6 +261,87 @@ class FuncDecl(Node):
     def __repr__(self):
         ret_str = f" -> {self.return_type}" if self.return_type else ""
         return f"FuncDecl({self.name}({len(self.params)} params){ret_str})"
+
+
+# Classes and OOP
+@dataclass
+class ClassDecl(Node):
+    """Class declaration"""
+    name: str
+    super_class: Optional[str]  # Name of parent class
+    methods: List['MethodDecl']
+    properties: List['PropertyDecl']
+    constructor: Optional['MethodDecl']  # Special constructor method
+    
+    def __repr__(self):
+        extends = f" extends {self.super_class}" if self.super_class else ""
+        return f"ClassDecl({self.name}{extends}, {len(self.methods)} methods, {len(self.properties)} properties)"
+
+
+@dataclass
+class MethodDecl(Node):
+    """Method declaration within a class"""
+    name: str
+    params: List[Param]
+    return_type: Optional[str]
+    body: Block
+    is_static: bool = False
+    
+    def __repr__(self):
+        static = "static " if self.is_static else ""
+        ret_str = f" -> {self.return_type}" if self.return_type else ""
+        return f"MethodDecl({static}{self.name}({len(self.params)} params){ret_str})"
+
+
+@dataclass
+class PropertyDecl(Node):
+    """Property declaration within a class"""
+    name: str
+    type_ref: Optional[str]
+    initializer: Optional[Node]  # Initial value expression
+    is_static: bool = False
+    
+    def __repr__(self):
+        static = "static " if self.is_static else ""
+        type_str = f": {self.type_ref}" if self.type_ref else ""
+        return f"PropertyDecl({static}{self.name}{type_str})"
+
+
+@dataclass
+class NewExpr(Node):
+    """New expression to create class instance"""
+    class_name: str
+    args: List[Node]
+    
+    def __repr__(self):
+        return f"NewExpr({self.class_name}, {len(self.args)} args)"
+
+
+@dataclass
+class ThisExpr(Node):
+    """This expression to reference current instance"""
+    
+    def __repr__(self):
+        return "ThisExpr()"
+
+
+@dataclass
+class SuperExpr(Node):
+    """Super expression to reference parent class"""
+    method_name: str  # Method being called on super
+    
+    def __repr__(self):
+        return f"SuperExpr({self.method_name})"
+
+
+@dataclass
+class MemberAccess(Node):
+    """Member access expression (object.property or object.method())"""
+    object: Node  # Object being accessed
+    member: str  # Member name
+    
+    def __repr__(self):
+        return f"MemberAccess(..., {self.member})"
 
 
 # Types
