@@ -8,6 +8,22 @@
 
 ## 🚀 Quick Start
 
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/Adahandles/Syntari.git
+cd Syntari
+
+# Run setup script
+./setup.sh
+
+# Or manually install
+pip install -e .
+```
+
+### Usage
+
 ```bash
 # Run a Syntari program
 python3 main.py hello_world.syn
@@ -17,9 +33,14 @@ python3 main.py --repl
 
 # Try examples
 python3 main.py examples/functions.syn
+
+# Run tests
+make test
 ```
 
 📖 **[Read Getting Started Guide](GETTING_STARTED.md)** - Learn the most logical order to understand and use Syntari
+
+👨‍💻 **[Read Contributing Guide](CONTRIBUTING.md)** - Set up your development environment
 
 ---
 
