@@ -32,7 +32,7 @@ python3 -m pip install --upgrade pip
 # Install the package in development mode
 echo ""
 echo "Installing Syntari in development mode..."
-pip install -e .
+python3 -m pip install -e .
 
 # Verify installation
 echo ""

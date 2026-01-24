@@ -9,7 +9,7 @@ import os
 # Read the requirements from requirements.txt
 def read_requirements():
     requirements_path = os.path.join(os.path.dirname(__file__), 'requirements.txt')
-    with open(requirements_path, 'r') as f:
+    with open(requirements_path, 'r', encoding='utf-8') as f:
         return [line.strip() for line in f if line.strip() and not line.startswith('#')]
 
 # Read the README for long description
