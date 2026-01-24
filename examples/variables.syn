@@ -1,0 +1,20 @@
+// Variable declaration and usage
+let x = 10
+let y = 20
+let z = 30
+
+print("x =", x)
+print("y =", y)
+print("z =", z)
+
+// Assignment
+x = 100
+print("x after assignment =", x)
+
+// Expression
+let sum = x + y + z
+print("sum =", sum)
+
+// Constants
+const PI = 3.14159
+print("PI =", PI)

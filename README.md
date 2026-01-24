@@ -6,6 +6,23 @@
 
 ---
 
+## 🚀 Quick Start
+
+```bash
+# Run a Syntari program
+python3 main.py hello_world.syn
+
+# Start interactive REPL
+python3 main.py --repl
+
+# Try examples
+python3 main.py examples/functions.syn
+```
+
+📖 **[Read Getting Started Guide](GETTING_STARTED.md)** - Learn the most logical order to understand and use Syntari
+
+---
+
 ## Overview
 
 **Syntari** is an AI-integrated, type-safe, functional-first programming language developed by **DeuOS, LLC**.  
@@ -79,6 +96,21 @@ This code prints a greeting and asks the AI to describe itself.
 | 0.3 | Current | Type system, package manager, JIT compiler |
 | 0.4 | Planned | Networking, web REPL, AI IDE |
 | 0.5+ | Future | On-chain deterministic execution, neural plugin system |
+
+---
+
+## 🚀 Development Planning & Next Steps
+
+**New to the project?** Start here:
+
+- **[GETTING_STARTED.md](GETTING_STARTED.md)** - 🎯 **START HERE** - Most logical order for learning, using, and extending Syntari
+- **[DEVELOPMENT_SUMMARY.md](DEVELOPMENT_SUMMARY.md)** - 📋 Executive summary and project overview
+- **[ROADMAP_VISUAL.md](ROADMAP_VISUAL.md)** - 🗺️ Visual roadmap with timelines and dependencies
+- **[ACTION_ITEMS.md](ACTION_ITEMS.md)** - ✅ Prioritized 2-week task breakdown
+- **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** - 🔧 Code examples and implementation tutorials
+- **[NEXT_STEPS.md](NEXT_STEPS.md)** - 📚 Comprehensive strategic planning for v0.4+
+
+**Current Status:** 🎉 **v0.3 Complete!** Full interpreter pipeline functional with 189 passing tests. CLI, REPL, and examples ready. See [GETTING_STARTED.md](GETTING_STARTED.md) for usage.
 
 ---
 

@@ -1,0 +1,204 @@
+// Classes and OOP Example
+// Demonstrates class definitions, constructors, methods, properties, and inheritance concepts
+
+print("=== Example 1: Basic Class ===");
+class Person {
+    name = "Unknown";
+    age = 0;
+    
+    fn constructor(n, a) {
+        this.name = n;
+        this.age = a;
+    }
+    
+    fn introduce() {
+        print("Hello, my name is:");
+        print(this.name);
+        print("I am:");
+        print(this.age);
+        print("years old");
+    }
+}
+
+let p1 = new Person("Alice", 30);
+p1.introduce();
+print("");
+
+// Example 2: Counter with Methods
+print("=== Example 2: Counter with Methods ===");
+class Counter {
+    count = 0;
+    
+    fn constructor() {
+        this.count = 0;
+    }
+    
+    fn increment() {
+        this.count = this.count + 1;
+    }
+    
+    fn decrement() {
+        this.count = this.count - 1;
+    }
+    
+    fn get_value() -> int {
+        return this.count;
+    }
+}
+
+let counter = new Counter();
+counter.increment();
+counter.increment();
+counter.increment();
+print("Counter value:");
+print(counter.get_value());
+counter.decrement();
+print("After decrement:");
+print(counter.get_value());
+print("");
+
+// Example 3: Calculator Class
+print("=== Example 3: Calculator Class ===");
+class Calculator {
+    lastResult = 0;
+    
+    fn add(a, b) -> int {
+        this.lastResult = a + b;
+        return this.lastResult;
+    }
+    
+    fn multiply(a, b) -> int {
+        this.lastResult = a * b;
+        return this.lastResult;
+    }
+    
+    fn get_last_result() -> int {
+        return this.lastResult;
+    }
+}
+
+let calc = new Calculator();
+let sum = calc.add(10, 5);
+print("10 + 5 =");
+print(sum);
+let product = calc.multiply(7, 8);
+print("7 * 8 =");
+print(product);
+print("Last result:");
+print(calc.get_last_result());
+print("");
+
+// Example 4: Multiple Instances
+print("=== Example 4: Multiple Instances ===");
+class Point {
+    x = 0;
+    y = 0;
+    
+    fn constructor(x_val, y_val) {
+        this.x = x_val;
+        this.y = y_val;
+    }
+    
+    fn display() {
+        print("Point:");
+        print(this.x);
+        print(this.y);
+    }
+    
+    fn distance_from_origin() -> int {
+        // Simplified distance (just sum for demo)
+        return this.x + this.y;
+    }
+}
+
+let p_a = new Point(3, 4);
+let p_b = new Point(7, 1);
+
+print("Point A:");
+p_a.display();
+print("Distance from origin:");
+print(p_a.distance_from_origin());
+
+print("Point B:");
+p_b.display();
+print("Distance from origin:");
+print(p_b.distance_from_origin());
+print("");
+
+// Example 5: String Builder
+print("=== Example 5: String Builder ===");
+class StringBuilder {
+    text = "";
+    
+    fn constructor() {
+        this.text = "";
+    }
+    
+    fn append(s) {
+        this.text = this.text + s;
+    }
+    
+    fn to_string() {
+        return this.text;
+    }
+}
+
+let sb = new StringBuilder();
+sb.append("Hello");
+sb.append(" ");
+sb.append("from");
+sb.append(" ");
+sb.append("Syntari");
+sb.append("!");
+print("Built string:");
+print(sb.to_string());
+print("");
+
+// Example 6: Bank Account
+print("=== Example 6: Bank Account ===");
+class BankAccount {
+    balance = 0;
+    accountName = "";
+    
+    fn constructor(name, initial_balance) {
+        this.accountName = name;
+        this.balance = initial_balance;
+    }
+    
+    fn deposit(amount) {
+        this.balance = this.balance + amount;
+        print("Deposited:");
+        print(amount);
+    }
+    
+    fn withdraw(amount) -> int {
+        if (this.balance >= amount) {
+            this.balance = this.balance - amount;
+            print("Withdrew:");
+            print(amount);
+            return 1;
+        }
+        print("Insufficient funds!");
+        return 0;
+    }
+    
+    fn get_balance() -> int {
+        return this.balance;
+    }
+}
+
+let account = new BankAccount("Alice", 1000);
+print("Initial balance:");
+print(account.get_balance());
+account.deposit(500);
+print("Balance after deposit:");
+print(account.get_balance());
+account.withdraw(200);
+print("Balance after withdrawal:");
+print(account.get_balance());
+account.withdraw(2000);
+print("Final balance:");
+print(account.get_balance());
+print("");
+
+print("=== All class examples completed ===");
