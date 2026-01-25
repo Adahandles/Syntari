@@ -6,7 +6,6 @@ Tests for SSRF, path traversal, and DoS prevention
 import pytest
 import tempfile
 import os
-from pathlib import Path
 from src.core import net
 from src.interpreter.main import _validate_file_path, _validate_output_path
 from runtime import SyntariVM, VMSecurityError, MAX_INSTRUCTIONS, MAX_STACK_SIZE
