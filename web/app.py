@@ -18,6 +18,14 @@ from src.interpreter.interpreter import Interpreter, RuntimeError as SyntariRunt
 import io
 from contextlib import redirect_stdout, redirect_stderr
 
+# Import VMSecurityError for proper exception handling
+try:
+    from runtime import VMSecurityError
+except ImportError:
+    # If runtime module is not available, define a dummy class
+    class VMSecurityError(Exception):
+        pass
+
 
 class SyntariSession:
     """Manages a persistent Syntari interpreter session for a user"""
@@ -82,13 +90,14 @@ class SyntariSession:
             self._add_to_history({"code": code, "success": False, "error": error_msg})
             return {"success": False, "error": error_msg, "output": None, "result": None}
 
+        except VMSecurityError as e:
+            # Security: Don't expose VMSecurityError details that could reveal internal limits
+            error_msg = "Security limit exceeded"
+            self._add_to_history({"code": code, "success": False, "error": error_msg})
+            return {"success": False, "error": error_msg, "output": None, "result": None}
+
         except Exception as e:
-            # Security: Don't expose VMSecurityError details
-            from runtime import VMSecurityError
-            if isinstance(e, VMSecurityError):
-                error_msg = "Security limit exceeded"
-            else:
-                error_msg = f"Unexpected error: {e}"
+            error_msg = f"Unexpected error: {e}"
             self._add_to_history({"code": code, "success": False, "error": error_msg})
             return {"success": False, "error": error_msg, "output": None, "result": None}
 
