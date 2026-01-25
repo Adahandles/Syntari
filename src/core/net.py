@@ -6,19 +6,32 @@ Part of v0.4 development.
 """
 
 import json
-import urllib.request
-import urllib.parse
-import urllib.error
-from typing import Dict, Any, Optional, Union
 import socket
+import urllib.error
+import urllib.parse
+import urllib.request
+from typing import Any, Dict, Optional, Union
+
 import ipaddress
 
 # Export test validation function for test suite use only
 __all__ = [
-    'HTTPResponse', 'HTTPError', 'NetworkError', 'SSRFError', 'WebSocketError',
-    'http_get', 'http_post', 'http_put', 'http_delete',
-    'net_get', 'net_post', 'net_put', 'net_delete', 'net_ws',
-    'WebSocket', '_validate_url_for_tests'
+    "HTTPResponse",
+    "HTTPError",
+    "NetworkError",
+    "SSRFError",
+    "WebSocketError",
+    "http_get",
+    "http_post",
+    "http_put",
+    "http_delete",
+    "net_get",
+    "net_post",
+    "net_put",
+    "net_delete",
+    "net_ws",
+    "WebSocket",
+    "_validate_url_for_tests",
 ]
 
 
@@ -147,7 +160,7 @@ def _validate_url(url: str) -> None:
 def _validate_url_for_tests(url: str, allow_private: bool = False) -> None:
     """
     Validate URL for test environments only. DO NOT USE IN PRODUCTION.
-    
+
     This function allows bypassing certain security checks for testing purposes.
     It should only be called from test code.
 
@@ -159,10 +172,13 @@ def _validate_url_for_tests(url: str, allow_private: bool = False) -> None:
         SSRFError: If URL is invalid or points to blocked resources
     """
     import os
+
     # Runtime check: only allow in test environment
     if os.environ.get("SYNTARI_ENV") != "test":
-        raise RuntimeError("_validate_url_for_tests can only be used in test environment")
-    
+        raise RuntimeError(
+            "_validate_url_for_tests can only be used in test environment"
+        )
+
     try:
         parsed = urllib.parse.urlparse(url)
 
@@ -199,7 +215,9 @@ def _validate_url_for_tests(url: str, allow_private: bool = False) -> None:
         raise SSRFError(f"Invalid URL format: {e}")
 
 
-def http_get(url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 30) -> HTTPResponse:
+def http_get(
+    url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 30
+) -> HTTPResponse:
     """
     Perform an HTTP GET request.
 
