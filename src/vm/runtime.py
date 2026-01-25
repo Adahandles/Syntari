@@ -45,6 +45,21 @@ OP = {
     0xFF: "HALT",
 }
 
+# Public API exports
+__all__ = [
+    "MAGIC",
+    "MAX_STACK_SIZE",
+    "MAX_INSTRUCTIONS",
+    "MAX_VARS",
+    "MAX_STRING_LENGTH",
+    "MAX_CALL_DEPTH",
+    "OP",
+    "VMSecurityError",
+    "CallFrame",
+    "SyntariVM",
+    "run_vm",
+]
+
 
 class VMSecurityError(Exception):
     """Raised when VM security limits are exceeded"""

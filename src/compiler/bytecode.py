@@ -48,6 +48,14 @@ OPCODES = {
     "HALT": 0xFF,  # Halt execution
 }
 
+# Public API exports
+__all__ = [
+    "MAGIC",
+    "OPCODES",
+    "BytecodeGenerator",
+    "compile_file",
+]
+
 
 class BytecodeGenerator:
     """Generates bytecode from Syntari AST"""

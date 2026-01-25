@@ -5,6 +5,55 @@ Syntari AST Nodes - Abstract Syntax Tree node definitions for v0.3
 from dataclasses import dataclass
 from typing import List, Optional
 
+# Public API exports
+__all__ = [
+    "Node",
+    "Program",
+    "Block",
+    "Number",
+    "String",
+    "Boolean",
+    "Var",
+    "VarDecl",
+    "VarAssign",
+    "MemberAssign",
+    "BinOp",
+    "UnaryOp",
+    "Call",
+    "Print",
+    "ExprStmt",
+    "IfStmt",
+    "WhileStmt",
+    "ReturnStmt",
+    "MatchStmt",
+    "TryStmt",
+    "CatchClause",
+    "ThrowStmt",
+    "Param",
+    "FuncDecl",
+    "ClassDecl",
+    "MethodDecl",
+    "PropertyDecl",
+    "NewExpr",
+    "ThisExpr",
+    "SuperExpr",
+    "MemberAccess",
+    "TypeRef",
+    "FieldDecl",
+    "TypeDecl",
+    "TraitDecl",
+    "FuncSignature",
+    "ImplDecl",
+    "ImportDecl",
+    "make_number",
+    "make_string",
+    "make_boolean",
+    "make_var",
+    "make_binop",
+    "make_call",
+    "make_block",
+]
+
 
 # Base class for all AST nodes
 class Node:

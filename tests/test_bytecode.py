@@ -9,7 +9,20 @@ from src.compiler.bytecode import BytecodeGenerator, compile_file
 from src.vm.runtime import SyntariVM, VMSecurityError
 from src.interpreter.lexer import tokenize
 from src.interpreter.parser import Parser
-from src.interpreter.nodes import Number, String, Boolean, BinOp, UnaryOp, VarDecl, Var
+from src.interpreter.nodes import (
+    Number,
+    String,
+    Boolean,
+    BinOp,
+    UnaryOp,
+    VarDecl,
+    Var,
+    Print,
+    Block,
+    IfStmt,
+    WhileStmt,
+    VarAssign,
+)
 
 
 class TestBytecodeGeneration:
