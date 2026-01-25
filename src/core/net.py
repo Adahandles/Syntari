@@ -79,18 +79,12 @@ BLOCKED_IP_RANGES = [
 ALLOWED_SCHEMES = {"http", "https"}
 
 
-def _validate_url(url: str, allow_private: bool = False, skip_dns: bool = False) -> None:
+def _validate_url(url: str) -> None:
     """
     Validate URL to prevent SSRF attacks.
 
     Args:
         url: The URL to validate
-        allow_private: If True, allows private IP ranges (default: False)
-                      This parameter can be used in controlled environments where
-                      access to internal services is intentionally allowed.
-        skip_dns: If True, skips DNS resolution check (for testing only)
-                 This is used in test environments where DNS resolution may fail
-                 for mock URLs. Should NEVER be True in production.
 
     Raises:
         SSRFError: If URL is invalid or points to blocked resources
@@ -108,23 +102,18 @@ def _validate_url(url: str, allow_private: bool = False, skip_dns: bool = False)
         if not parsed.hostname:
             raise SSRFError("URL must have a valid hostname")
 
-        # Skip DNS resolution in test environments
-        if skip_dns:
-            return
-
         # Resolve hostname to IP
         try:
             # Get IP address
             ip_str = socket.gethostbyname(parsed.hostname)
             ip = ipaddress.ip_address(ip_str)
 
-            # Check if IP is in blocked ranges (unless allow_private is True)
-            if not allow_private:
-                for blocked_range in BLOCKED_IP_RANGES:
-                    if ip in blocked_range:
-                        raise SSRFError(
-                            f"Access to private/internal IP addresses is not allowed: {ip_str}"
-                        )
+            # Check if IP is in blocked ranges
+            for blocked_range in BLOCKED_IP_RANGES:
+                if ip in blocked_range:
+                    raise SSRFError(
+                        f"Access to private/internal IP addresses is not allowed: {ip_str}"
+                    )
 
         except socket.gaierror:
             # Allow DNS resolution failures for public domains
@@ -134,15 +123,69 @@ def _validate_url(url: str, allow_private: bool = False, skip_dns: bool = False)
                 try:
                     # Check if hostname is actually an IP address
                     ip = ipaddress.ip_address(parsed.hostname)
-                    if not allow_private:
-                        for blocked_range in BLOCKED_IP_RANGES:
-                            if ip in blocked_range:
-                                raise SSRFError(
-                                    f"Access to private/internal IP addresses is not allowed: {parsed.hostname}"
-                                )
+                    for blocked_range in BLOCKED_IP_RANGES:
+                        if ip in blocked_range:
+                            raise SSRFError(
+                                f"Access to private/internal IP addresses is not allowed: {parsed.hostname}"
+                            )
                 except ValueError:
                     # Not an IP address, hostname is fine - DNS resolution just failed
                     pass
+
+    except ValueError as e:
+        raise SSRFError(f"Invalid URL format: {e}")
+
+
+def _validate_url_for_tests(url: str, allow_private: bool = False) -> None:
+    """
+    Validate URL for test environments only. DO NOT USE IN PRODUCTION.
+    
+    This function allows bypassing certain security checks for testing purposes.
+    It should only be called from test code.
+
+    Args:
+        url: The URL to validate
+        allow_private: If True, allows private IP ranges (for testing only)
+
+    Raises:
+        SSRFError: If URL is invalid or points to blocked resources
+    """
+    import os
+    # Runtime check: only allow in test environment
+    if os.environ.get("SYNTARI_ENV") != "test":
+        raise RuntimeError("_validate_url_for_tests can only be used in test environment")
+    
+    try:
+        parsed = urllib.parse.urlparse(url)
+
+        # Check scheme
+        if parsed.scheme not in ALLOWED_SCHEMES:
+            raise SSRFError(
+                f"Scheme '{parsed.scheme}' not allowed. Only {ALLOWED_SCHEMES} are permitted."
+            )
+
+        # Check for hostname
+        if not parsed.hostname:
+            raise SSRFError("URL must have a valid hostname")
+
+        # For tests, allow DNS resolution failures
+        if allow_private:
+            return
+
+        # Resolve hostname to IP
+        try:
+            ip_str = socket.gethostbyname(parsed.hostname)
+            ip = ipaddress.ip_address(ip_str)
+
+            for blocked_range in BLOCKED_IP_RANGES:
+                if ip in blocked_range:
+                    raise SSRFError(
+                        f"Access to private/internal IP addresses is not allowed: {ip_str}"
+                    )
+
+        except socket.gaierror:
+            # Allow DNS resolution failures in tests
+            pass
 
     except ValueError as e:
         raise SSRFError(f"Invalid URL format: {e}")

@@ -51,7 +51,7 @@ def input(prompt=""):
         
         # Read input with size checking
         line = sys.stdin.readline()
-        if len(line) >= MAX_INPUT_LENGTH:
+        if len(line) > MAX_INPUT_LENGTH:
             raise ValueError(f"Input exceeds maximum allowed length of {MAX_INPUT_LENGTH} bytes")
         return line.rstrip("\n")
     except Exception as e:

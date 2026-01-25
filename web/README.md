@@ -114,13 +114,31 @@ Response:
 
 ## Security
 
-The Web REPL includes security features:
-- Runs on localhost by default (127.0.0.1)
-- Inherits all security protections from the Syntari interpreter:
-  - SSRF prevention in network operations
-  - Path traversal protection in file operations
-  - Resource limits (stack size, execution time, memory)
-  - Input validation
+The Web REPL includes comprehensive security features:
+
+### Built-in Protections
+- **Runs on localhost by default** (127.0.0.1)
+- **Session history size limit**: Maximum 100 entries to prevent memory exhaustion
+- **WebSocket message size limit**: 1MB maximum to prevent DoS attacks
+- **Input validation**: All inputs are validated and sanitized
+
+### Inherited Security Features
+Inherits all security protections from the Syntari interpreter:
+- **SSRF prevention**: Blocks access to private/internal IPs in network operations
+- **Path traversal protection**: Validates and sanitizes file paths
+- **Resource limits**: Stack size (10K), instruction count (1M), memory limits
+- **Input validation**: Size limits on all input operations
+
+### CORS Configuration
+- **Development**: Defaults to `http://localhost:8080`
+- **Production**: Configure via `SYNTARI_CORS_ORIGIN` environment variable
+- Set to specific trusted origins only (never use wildcard `*`)
+
+Example:
+```bash
+export SYNTARI_CORS_ORIGIN="https://yourdomain.com"
+python app.py
+```
 
 ### Production Deployment
 

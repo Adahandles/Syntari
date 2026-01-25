@@ -13,7 +13,7 @@ from src.interpreter.lexer import tokenize, LexerError
 from src.interpreter.parser import parse, ParseError
 from src.interpreter.interpreter import interpret, RuntimeError as SyntariRuntimeError
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 
 
 def _validate_file_path(path: str, allowed_extensions: Optional[set] = None) -> str:

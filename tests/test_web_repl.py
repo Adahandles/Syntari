@@ -146,6 +146,23 @@ fn add(a, b) {
         assert result3["success"] is True
         assert "42" in result3["output"]
 
+    def test_history_size_limit(self):
+        """Test that history is limited to prevent memory exhaustion"""
+        session = SyntariSession()
+
+        # Execute more than MAX_HISTORY_SIZE commands
+        for i in range(session.MAX_HISTORY_SIZE + 10):
+            session.execute(f"let x{i} = {i}")
+
+        # History should not exceed MAX_HISTORY_SIZE
+        assert len(session.get_history()) == session.MAX_HISTORY_SIZE
+
+        # Oldest entries should be removed
+        history = session.get_history()
+        # First entry should be from iteration 10, not 0
+        assert "x0" not in history[0]["code"]
+        assert "x10" in history[0]["code"]
+
 
 class TestWebApp:
     """Tests for web application"""

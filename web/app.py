@@ -22,6 +22,9 @@ from contextlib import redirect_stdout, redirect_stderr
 class SyntariSession:
     """Manages a persistent Syntari interpreter session for a user"""
 
+    # Maximum number of history entries to prevent memory exhaustion
+    MAX_HISTORY_SIZE = 100
+
     def __init__(self):
         self.interpreter = Interpreter()
         self.history = []
@@ -52,10 +55,13 @@ class SyntariSession:
             stdout_value = output_buffer.getvalue()
             stderr_value = error_buffer.getvalue()
 
-            # Store in history
+            # Store in history with size limit
             self.history.append(
                 {"code": code, "success": True, "output": stdout_value, "result": result}
             )
+            # Trim history if it exceeds max size
+            if len(self.history) > self.MAX_HISTORY_SIZE:
+                self.history.pop(0)
 
             return {
                 "success": True,
@@ -66,23 +72,35 @@ class SyntariSession:
 
         except LexerError as e:
             error_msg = f"Lexer error: {e}"
-            self.history.append({"code": code, "success": False, "error": error_msg})
+            self._add_to_history({"code": code, "success": False, "error": error_msg})
             return {"success": False, "error": error_msg, "output": None, "result": None}
 
         except ParseError as e:
             error_msg = f"Parse error: {e}"
-            self.history.append({"code": code, "success": False, "error": error_msg})
+            self._add_to_history({"code": code, "success": False, "error": error_msg})
             return {"success": False, "error": error_msg, "output": None, "result": None}
 
         except SyntariRuntimeError as e:
             error_msg = f"Runtime error: {e}"
-            self.history.append({"code": code, "success": False, "error": error_msg})
+            self._add_to_history({"code": code, "success": False, "error": error_msg})
             return {"success": False, "error": error_msg, "output": None, "result": None}
 
         except Exception as e:
-            error_msg = f"Unexpected error: {e}"
-            self.history.append({"code": code, "success": False, "error": error_msg})
+            # Security: Don't expose VMSecurityError details
+            from runtime import VMSecurityError
+            if isinstance(e, VMSecurityError):
+                error_msg = "Security limit exceeded"
+            else:
+                error_msg = f"Unexpected error: {e}"
+            self._add_to_history({"code": code, "success": False, "error": error_msg})
             return {"success": False, "error": error_msg, "output": None, "result": None}
+
+    def _add_to_history(self, entry: dict):
+        """Add entry to history with size limit"""
+        self.history.append(entry)
+        # Trim history if it exceeds max size
+        if len(self.history) > self.MAX_HISTORY_SIZE:
+            self.history.pop(0)
 
     def get_history(self) -> list:
         """Get execution history"""
@@ -101,6 +119,9 @@ class SyntariSession:
 # Store sessions per WebSocket connection
 sessions = {}
 
+# Maximum WebSocket message size (1MB)
+MAX_MESSAGE_SIZE = 1024 * 1024
+
 
 async def websocket_handler(request):
     """Handle WebSocket connections for REPL"""
@@ -114,6 +135,13 @@ async def websocket_handler(request):
     try:
         async for msg in ws:
             if msg.type == web.WSMsgType.TEXT:
+                # Security: Check message size to prevent memory exhaustion
+                if len(msg.data) > MAX_MESSAGE_SIZE:
+                    await ws.send_json(
+                        {"type": "error", "data": {"error": "Message size exceeds limit"}}
+                    )
+                    continue
+
                 try:
                     data = json.loads(msg.data)
                     command = data.get("command")
@@ -188,12 +216,16 @@ def create_app():
     if static_dir.exists():
         app.router.add_static("/static/", path=static_dir, name="static")
 
-    # Configure CORS
+    # Configure CORS - Development only
+    # For production, configure this with specific trusted origins
+    import os
+    cors_origin = os.environ.get("SYNTARI_CORS_ORIGIN", "http://localhost:8080")
+    
     cors = aiohttp_cors.setup(
         app,
         defaults={
-            "*": aiohttp_cors.ResourceOptions(
-                allow_credentials=True,
+            cors_origin: aiohttp_cors.ResourceOptions(
+                allow_credentials=False,
                 expose_headers="*",
                 allow_headers="*",
             )
