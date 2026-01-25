@@ -1,22 +1,594 @@
-import requests
+"""
+Syntari Networking Module
+
+Provides HTTP client, WebSocket, and basic networking functionality.
+Part of v0.4 development.
+"""
+
+import json
+import socket
+import urllib.error
+import urllib.parse
+import urllib.request
+from typing import Any, Dict, Optional, Union
+
+import ipaddress
+
+# Export test validation function for test suite use only
+__all__ = [
+    "HTTPResponse",
+    "HTTPError",
+    "NetworkError",
+    "SSRFError",
+    "WebSocketError",
+    "http_get",
+    "http_post",
+    "http_put",
+    "http_delete",
+    "net_get",
+    "net_post",
+    "net_put",
+    "net_delete",
+    "net_ws",
+    "WebSocket",
+    "_validate_url_for_tests",
+]
 
 
-class Net:
-    def __init__(self):
-        pass
+class HTTPResponse:
+    """Represents an HTTP response."""
 
-    def make_request(self, url):
-        response = requests.get(url)
-        return response.status_code
+    def __init__(self, status_code: int, headers: Dict[str, str], body: str):
+        self.status_code = status_code
+        self.headers = headers
+        self.body = body
 
-    def post_data(self, url, data):
-        response = requests.post(url, json=data)
-        return response.status_code
+    def json(self) -> Any:
+        """Parse response body as JSON."""
+        try:
+            return json.loads(self.body)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Response is not valid JSON: {e}")
 
-    def put_data(self, url, data):
-        response = requests.put(url, json=data)
-        return response.status_code
+    def text(self) -> str:
+        """Get response body as text."""
+        return self.body
 
-    def delete_data(self, url):
-        response = requests.delete(url)
-        return response.status_code
+    def __repr__(self):
+        return f"HTTPResponse(status={self.status_code}, body_length={len(self.body)})"
+
+
+class NetworkError(Exception):
+    """Base exception for network errors."""
+
+    pass
+
+
+class HTTPError(NetworkError):
+    """Exception for HTTP errors."""
+
+    def __init__(self, status_code: int, message: str):
+        self.status_code = status_code
+        super().__init__(f"HTTP {status_code}: {message}")
+
+
+class WebSocketError(NetworkError):
+    """Exception for WebSocket errors."""
+
+    pass
+
+
+class SSRFError(NetworkError):
+    """Exception for SSRF (Server-Side Request Forgery) prevention."""
+
+    pass
+
+
+# Blocked IP ranges for SSRF prevention
+BLOCKED_IP_RANGES = [
+    ipaddress.ip_network("127.0.0.0/8"),  # Loopback
+    ipaddress.ip_network("10.0.0.0/8"),  # Private network
+    ipaddress.ip_network("172.16.0.0/12"),  # Private network
+    ipaddress.ip_network("192.168.0.0/16"),  # Private network
+    ipaddress.ip_network("169.254.0.0/16"),  # Link-local
+    ipaddress.ip_network("::1/128"),  # IPv6 loopback
+    ipaddress.ip_network("fc00::/7"),  # IPv6 unique local
+    ipaddress.ip_network("fe80::/10"),  # IPv6 link-local
+]
+
+# Allowed URL schemes
+ALLOWED_SCHEMES = {"http", "https"}
+
+
+def _validate_url(url: str) -> None:
+    """
+    Validate URL to prevent SSRF attacks.
+
+    Args:
+        url: The URL to validate
+
+    Raises:
+        SSRFError: If URL is invalid or points to blocked resources
+    """
+    try:
+        parsed = urllib.parse.urlparse(url)
+
+        # Check scheme
+        if parsed.scheme not in ALLOWED_SCHEMES:
+            raise SSRFError(
+                f"Scheme '{parsed.scheme}' not allowed. Only {ALLOWED_SCHEMES} are permitted."
+            )
+
+        # Check for hostname
+        if not parsed.hostname:
+            raise SSRFError("URL must have a valid hostname")
+
+        # Resolve hostname to IP
+        try:
+            # Get IP address
+            ip_str = socket.gethostbyname(parsed.hostname)
+            ip = ipaddress.ip_address(ip_str)
+
+            # Check if IP is in blocked ranges
+            for blocked_range in BLOCKED_IP_RANGES:
+                if ip in blocked_range:
+                    raise SSRFError(
+                        f"Access to private/internal IP addresses is not allowed: {ip_str}"
+                    )
+
+        except socket.gaierror:
+            # Allow DNS resolution failures for public domains
+            # This can happen in test environments or with unreachable domains
+            # We'll just validate that it's not an IP address pointing to private space
+            if parsed.hostname:
+                try:
+                    # Check if hostname is actually an IP address
+                    ip = ipaddress.ip_address(parsed.hostname)
+                    for blocked_range in BLOCKED_IP_RANGES:
+                        if ip in blocked_range:
+                            raise SSRFError(
+                                f"Access to private/internal IP addresses is not allowed: {parsed.hostname}"
+                            )
+                except ValueError:
+                    # Not an IP address, hostname is fine - DNS resolution just failed
+                    pass
+
+    except ValueError as e:
+        raise SSRFError(f"Invalid URL format: {e}")
+
+
+def _validate_url_for_tests(url: str, allow_private: bool = False) -> None:
+    """
+    Validate URL for test environments only. DO NOT USE IN PRODUCTION.
+
+    This function allows bypassing certain security checks for testing purposes.
+    It should only be called from test code.
+
+    Args:
+        url: The URL to validate
+        allow_private: If True, allows private IP ranges (for testing only)
+
+    Raises:
+        SSRFError: If URL is invalid or points to blocked resources
+    """
+    import os
+
+    # Runtime check: only allow in test environment
+    if os.environ.get("SYNTARI_ENV") != "test":
+        raise RuntimeError(
+            "_validate_url_for_tests can only be used in test environment"
+        )
+
+    try:
+        parsed = urllib.parse.urlparse(url)
+
+        # Check scheme
+        if parsed.scheme not in ALLOWED_SCHEMES:
+            raise SSRFError(
+                f"Scheme '{parsed.scheme}' not allowed. Only {ALLOWED_SCHEMES} are permitted."
+            )
+
+        # Check for hostname
+        if not parsed.hostname:
+            raise SSRFError("URL must have a valid hostname")
+
+        # For tests, allow DNS resolution failures
+        if allow_private:
+            return
+
+        # Resolve hostname to IP
+        try:
+            ip_str = socket.gethostbyname(parsed.hostname)
+            ip = ipaddress.ip_address(ip_str)
+
+            for blocked_range in BLOCKED_IP_RANGES:
+                if ip in blocked_range:
+                    raise SSRFError(
+                        f"Access to private/internal IP addresses is not allowed: {ip_str}"
+                    )
+
+        except socket.gaierror:
+            # Allow DNS resolution failures in tests
+            pass
+
+    except ValueError as e:
+        raise SSRFError(f"Invalid URL format: {e}")
+
+
+def http_get(
+    url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 30
+) -> HTTPResponse:
+    """
+    Perform an HTTP GET request.
+
+    Args:
+        url: The URL to request
+        headers: Optional dictionary of headers to send
+        timeout: Request timeout in seconds (default: 30)
+
+    Returns:
+        HTTPResponse object with status, headers, and body
+
+    Raises:
+        SSRFError: If URL validation fails
+        HTTPError: If the HTTP request fails
+        NetworkError: If a network error occurs
+    """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
+    try:
+        req = urllib.request.Request(url, method="GET")
+
+        # Add custom headers
+        if headers:
+            for key, value in headers.items():
+                req.add_header(key, value)
+
+        # Perform request
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            status_code = response.getcode()
+            response_headers = dict(response.headers)
+            body = response.read().decode("utf-8")
+
+            return HTTPResponse(status_code, response_headers, body)
+
+    except urllib.error.HTTPError as e:
+        raise HTTPError(e.code, e.reason)
+    except urllib.error.URLError as e:
+        raise NetworkError(f"Network error: {e.reason}")
+    except socket.timeout:
+        raise NetworkError(f"Request timed out after {timeout} seconds")
+    except Exception as e:
+        raise NetworkError(f"Unexpected error: {e}")
+
+
+def http_post(
+    url: str,
+    data: Union[Dict[str, Any], str],
+    headers: Optional[Dict[str, str]] = None,
+    timeout: int = 30,
+) -> HTTPResponse:
+    """
+    Perform an HTTP POST request.
+
+    Args:
+        url: The URL to request
+        data: Data to send (dict will be JSON-encoded, str sent as-is)
+        headers: Optional dictionary of headers to send
+        timeout: Request timeout in seconds (default: 30)
+
+    Returns:
+        HTTPResponse object with status, headers, and body
+
+    Raises:
+        SSRFError: If URL validation fails
+        HTTPError: If the HTTP request fails
+        NetworkError: If a network error occurs
+    """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
+    try:
+        # Prepare data
+        if isinstance(data, dict):
+            post_data = json.dumps(data).encode("utf-8")
+            content_type = "application/json"
+        else:
+            post_data = data.encode("utf-8")
+            content_type = "text/plain"
+
+        # Create request
+        req = urllib.request.Request(url, data=post_data, method="POST")
+        req.add_header("Content-Type", content_type)
+        req.add_header("Content-Length", str(len(post_data)))
+
+        # Add custom headers
+        if headers:
+            for key, value in headers.items():
+                req.add_header(key, value)
+
+        # Perform request
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            status_code = response.getcode()
+            response_headers = dict(response.headers)
+            body = response.read().decode("utf-8")
+
+            return HTTPResponse(status_code, response_headers, body)
+
+    except urllib.error.HTTPError as e:
+        raise HTTPError(e.code, e.reason)
+    except urllib.error.URLError as e:
+        raise NetworkError(f"Network error: {e.reason}")
+    except socket.timeout:
+        raise NetworkError(f"Request timed out after {timeout} seconds")
+    except Exception as e:
+        raise NetworkError(f"Unexpected error: {e}")
+
+
+def http_put(
+    url: str,
+    data: Union[Dict[str, Any], str],
+    headers: Optional[Dict[str, str]] = None,
+    timeout: int = 30,
+) -> HTTPResponse:
+    """
+    Perform an HTTP PUT request.
+
+    Args:
+        url: The URL to request
+        data: Data to send (dict will be JSON-encoded, str sent as-is)
+        headers: Optional dictionary of headers to send
+        timeout: Request timeout in seconds (default: 30)
+
+    Returns:
+        HTTPResponse object with status, headers, and body
+
+    Raises:
+        SSRFError: If URL validation fails
+        HTTPError: If the HTTP request fails
+        NetworkError: If a network error occurs
+    """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
+    try:
+        # Prepare data
+        if isinstance(data, dict):
+            put_data = json.dumps(data).encode("utf-8")
+            content_type = "application/json"
+        else:
+            put_data = data.encode("utf-8")
+            content_type = "text/plain"
+
+        # Create request
+        req = urllib.request.Request(url, data=put_data, method="PUT")
+        req.add_header("Content-Type", content_type)
+        req.add_header("Content-Length", str(len(put_data)))
+
+        # Add custom headers
+        if headers:
+            for key, value in headers.items():
+                req.add_header(key, value)
+
+        # Perform request
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            status_code = response.getcode()
+            response_headers = dict(response.headers)
+            body = response.read().decode("utf-8")
+
+            return HTTPResponse(status_code, response_headers, body)
+
+    except urllib.error.HTTPError as e:
+        raise HTTPError(e.code, e.reason)
+    except urllib.error.URLError as e:
+        raise NetworkError(f"Network error: {e.reason}")
+    except socket.timeout:
+        raise NetworkError(f"Request timed out after {timeout} seconds")
+    except Exception as e:
+        raise NetworkError(f"Unexpected error: {e}")
+
+
+def http_delete(
+    url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 30
+) -> HTTPResponse:
+    """
+    Perform an HTTP DELETE request.
+
+    Args:
+        url: The URL to request
+        headers: Optional dictionary of headers to send
+        timeout: Request timeout in seconds (default: 30)
+
+    Returns:
+        HTTPResponse object with status, headers, and body
+
+    Raises:
+        SSRFError: If URL validation fails
+        HTTPError: If the HTTP request fails
+        NetworkError: If a network error occurs
+    """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
+    try:
+        req = urllib.request.Request(url, method="DELETE")
+
+        # Add custom headers
+        if headers:
+            for key, value in headers.items():
+                req.add_header(key, value)
+
+        # Perform request
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            status_code = response.getcode()
+            response_headers = dict(response.headers)
+            body = response.read().decode("utf-8")
+
+            return HTTPResponse(status_code, response_headers, body)
+
+    except urllib.error.HTTPError as e:
+        raise HTTPError(e.code, e.reason)
+    except urllib.error.URLError as e:
+        raise NetworkError(f"Network error: {e.reason}")
+    except socket.timeout:
+        raise NetworkError(f"Request timed out after {timeout} seconds")
+    except Exception as e:
+        raise NetworkError(f"Unexpected error: {e}")
+
+
+class WebSocket:
+    """
+    Basic WebSocket client implementation.
+    Note: This is a simplified implementation for v0.4.
+    For production use, consider using the `websockets` library.
+    """
+
+    def __init__(self, url: str):
+        self.url = url
+        self.socket = None
+        self.connected = False
+
+    def connect(self, timeout: int = 30):
+        """
+        Connect to the WebSocket server.
+
+        Args:
+            timeout: Connection timeout in seconds
+
+        Raises:
+            WebSocketError: If connection fails
+        """
+        raise NotImplementedError(
+            "WebSocket support requires the 'websockets' library. "
+            "This is a stub implementation for v0.4. "
+            "To use WebSockets, install: pip install websockets"
+        )
+
+    def send(self, message: str):
+        """
+        Send a message over the WebSocket.
+
+        Args:
+            message: The message to send
+
+        Raises:
+            WebSocketError: If sending fails or not connected
+        """
+        if not self.connected:
+            raise WebSocketError("Not connected to WebSocket server")
+        raise NotImplementedError("WebSocket send not implemented in v0.4 stub")
+
+    def receive(self, timeout: int = 30) -> str:
+        """
+        Receive a message from the WebSocket.
+
+        Args:
+            timeout: Receive timeout in seconds
+
+        Returns:
+            The received message
+
+        Raises:
+            WebSocketError: If receiving fails or not connected
+        """
+        if not self.connected:
+            raise WebSocketError("Not connected to WebSocket server")
+        raise NotImplementedError("WebSocket receive not implemented in v0.4 stub")
+
+    def close(self):
+        """Close the WebSocket connection."""
+        if self.connected:
+            self.connected = False
+            if self.socket:
+                self.socket.close()
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+
+# Syntari-accessible functions for the interpreter
+def net_get(url: str) -> Dict[str, Any]:
+    """Syntari wrapper for HTTP GET."""
+    try:
+        response = http_get(url)
+        return {
+            "status": response.status_code,
+            "headers": response.headers,
+            "body": response.body,
+            "ok": 200 <= response.status_code < 300,
+        }
+    except SSRFError as e:
+        # SSRF errors should be caught and reported as security errors
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
+    except HTTPError as e:
+        return {"status": e.status_code, "error": str(e), "ok": False}
+    except NetworkError as e:
+        return {"error": str(e), "ok": False}
+
+
+def net_post(url: str, data: Any) -> Dict[str, Any]:
+    """Syntari wrapper for HTTP POST."""
+    try:
+        response = http_post(url, data)
+        return {
+            "status": response.status_code,
+            "headers": response.headers,
+            "body": response.body,
+            "ok": 200 <= response.status_code < 300,
+        }
+    except SSRFError as e:
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
+    except HTTPError as e:
+        return {"status": e.status_code, "error": str(e), "ok": False}
+    except NetworkError as e:
+        return {"error": str(e), "ok": False}
+
+
+def net_put(url: str, data: Any) -> Dict[str, Any]:
+    """Syntari wrapper for HTTP PUT."""
+    try:
+        response = http_put(url, data)
+        return {
+            "status": response.status_code,
+            "headers": response.headers,
+            "body": response.body,
+            "ok": 200 <= response.status_code < 300,
+        }
+    except SSRFError as e:
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
+    except HTTPError as e:
+        return {"status": e.status_code, "error": str(e), "ok": False}
+    except NetworkError as e:
+        return {"error": str(e), "ok": False}
+
+
+def net_delete(url: str) -> Dict[str, Any]:
+    """Syntari wrapper for HTTP DELETE."""
+    try:
+        response = http_delete(url)
+        return {
+            "status": response.status_code,
+            "headers": response.headers,
+            "body": response.body,
+            "ok": 200 <= response.status_code < 300,
+        }
+    except SSRFError as e:
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
+    except HTTPError as e:
+        return {"status": e.status_code, "error": str(e), "ok": False}
+    except NetworkError as e:
+        return {"error": str(e), "ok": False}
+
+
+def net_ws(url: str) -> Dict[str, Any]:
+    """Syntari wrapper for WebSocket (stub for v0.4)."""
+    return {
+        "error": "WebSocket support not yet implemented in v0.4",
+        "ok": False,
+        "message": "This is a stub. Full WebSocket support coming in future release.",
+    }
