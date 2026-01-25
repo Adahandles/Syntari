@@ -158,7 +158,11 @@ class SyntariVM:
                         f"Variable limit {MAX_VARS} exceeded. Too many variables defined."
                     )
 
-                val = self.stack.pop() if self.stack else None
+                # Security check: stack underflow
+                if not self.stack:
+                    raise RuntimeError("Stack underflow in STORE operation")
+
+                val = self.stack.pop()
                 self.vars[name] = val
 
             elif op == 0x03:  # LOAD name
@@ -191,7 +195,11 @@ class SyntariVM:
                     self.stack.append(a / b)
 
             elif op == 0x08:  # PRINT
-                val = self.stack.pop() if self.stack else None
+                # Security check: stack underflow
+                if not self.stack:
+                    raise RuntimeError("Stack underflow in PRINT operation")
+
+                val = self.stack.pop()
                 print(val)
 
             elif op == 0xFF:  # HALT

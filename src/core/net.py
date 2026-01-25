@@ -453,6 +453,9 @@ def net_get(url: str) -> Dict[str, Any]:
             "body": response.body,
             "ok": 200 <= response.status_code < 300,
         }
+    except SSRFError as e:
+        # SSRF errors should be caught and reported as security errors
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
     except HTTPError as e:
         return {"status": e.status_code, "error": str(e), "ok": False}
     except NetworkError as e:
@@ -469,6 +472,8 @@ def net_post(url: str, data: Any) -> Dict[str, Any]:
             "body": response.body,
             "ok": 200 <= response.status_code < 300,
         }
+    except SSRFError as e:
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
     except HTTPError as e:
         return {"status": e.status_code, "error": str(e), "ok": False}
     except NetworkError as e:
@@ -485,6 +490,8 @@ def net_put(url: str, data: Any) -> Dict[str, Any]:
             "body": response.body,
             "ok": 200 <= response.status_code < 300,
         }
+    except SSRFError as e:
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
     except HTTPError as e:
         return {"status": e.status_code, "error": str(e), "ok": False}
     except NetworkError as e:
@@ -501,6 +508,8 @@ def net_delete(url: str) -> Dict[str, Any]:
             "body": response.body,
             "ok": 200 <= response.status_code < 300,
         }
+    except SSRFError as e:
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
     except HTTPError as e:
         return {"status": e.status_code, "error": str(e), "ok": False}
     except NetworkError as e:
