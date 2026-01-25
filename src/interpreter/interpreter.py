@@ -482,9 +482,7 @@ class Interpreter:
             if not exception_caught:
                 raise
         except RuntimeError as e:
-            # Wrap runtime errors as Syntari exceptions for catch blocks
-            # syntari_exc = SyntariException(e.message, "RuntimeError")  # noqa: F841
-
+            # Handle runtime errors in catch blocks
             for catch_clause in node.catch_clauses:
                 if (
                     catch_clause.exception_type is None
