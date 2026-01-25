@@ -3,7 +3,6 @@ Syntari Web REPL - Backend Server
 Provides WebSocket server for executing Syntari code in the browser
 """
 
-import asyncio
 import json
 import sys
 from pathlib import Path
