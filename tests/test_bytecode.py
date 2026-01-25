@@ -6,7 +6,7 @@ import pytest
 import os
 import tempfile
 from src.compiler.bytecode import BytecodeGenerator, compile_file, OPCODES
-from src.vm.runtime import SyntariVM, run_vm, VMSecurityError
+from src.vm.runtime import SyntariVM, VMSecurityError
 from src.interpreter.lexer import tokenize
 from src.interpreter.parser import Parser
 from src.interpreter.nodes import Number, String, Boolean, BinOp, UnaryOp, VarDecl, Var
