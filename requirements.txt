@@ -1,14 +1,14 @@
 # Syntari Programming Language Requirements
 #
-# NOTE: This file is maintained for backwards compatibility only.
-# All dependencies are now managed in pyproject.toml.
+# NOTE: All dependencies are now managed in pyproject.toml (single source of truth).
+# This file is maintained for installation compatibility with tools that expect requirements.txt.
 #
 # To install Syntari with all dependencies, use:
 #   pip install -e ".[web]"
 #
 # This will install:
-# - Core dependencies (pytest, black, flake8, mypy, pytest-asyncio)
+# - Core dependencies (pytest, black, flake8, mypy, pytest-asyncio, pytest-cov)
 # - Web extras (aiohttp, aiohttp-cors)
-
-# For backwards compatibility, you can still install from this file:
+#
+# For backwards compatibility with `pip install -r requirements.txt`:
 -e .[web]
