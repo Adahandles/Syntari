@@ -21,39 +21,39 @@ def parse_and_run(code: str) -> Interpreter:
 
 class TestClassBasics:
     """Test basic class functionality"""
-    
+
     def test_class_declaration(self):
         """Test declaring a class"""
-        code = '''
+        code = """
         class MyClass {
             x = 10;
         }
-        '''
+        """
         interp = parse_and_run(code)
         # Class should be defined in environment
-        assert 'MyClass' in interp.environment.variables
-    
+        assert "MyClass" in interp.environment.variables
+
     def test_create_instance(self):
         """Test creating class instance with new"""
-        code = '''
+        code = """
         class MyClass {
             x = 10;
         }
         let obj = new MyClass();
-        '''
+        """
         interp = parse_and_run(code)
         obj = interp.environment.get("obj")
         assert isinstance(obj, ClassInstance)
-    
+
     def test_access_property(self):
         """Test accessing object property"""
-        code = '''
+        code = """
         class MyClass {
             value = 42;
         }
         let obj = new MyClass();
         let result = obj.value;
-        '''
+        """
         interp = parse_and_run(code)
         result = interp.environment.get("result")
         assert result == 42  # Properties are initialized with their default values
@@ -61,10 +61,10 @@ class TestClassBasics:
 
 class TestConstructor:
     """Test constructor functionality"""
-    
+
     def test_constructor_sets_properties(self):
         """Test that constructor can set properties"""
-        code = '''
+        code = """
         class Person {
             name = "";
             age = 0;
@@ -75,15 +75,15 @@ class TestConstructor:
             }
         }
         let p = new Person("Alice", 30);
-        '''
+        """
         interp = parse_and_run(code)
         p = interp.environment.get("p")
         assert p.properties["name"] == "Alice"
         assert p.properties["age"] == 30
-    
+
     def test_constructor_with_no_params(self):
         """Test constructor with no parameters"""
-        code = '''
+        code = """
         class Counter {
             count = 0;
             
@@ -92,7 +92,7 @@ class TestConstructor:
             }
         }
         let c = new Counter();
-        '''
+        """
         interp = parse_and_run(code)
         c = interp.environment.get("c")
         assert c.properties["count"] == 0
@@ -100,10 +100,10 @@ class TestConstructor:
 
 class TestMethods:
     """Test class methods"""
-    
+
     def test_simple_method(self):
         """Test calling a simple method"""
-        code = '''
+        code = """
         class Greeter {
             message = "";
             
@@ -117,13 +117,13 @@ class TestMethods:
         }
         let g = new Greeter("Hello");
         g.greet();
-        '''
+        """
         # Should not raise
         parse_and_run(code)
-    
+
     def test_method_with_parameters(self):
         """Test method with parameters"""
-        code = '''
+        code = """
         class Calculator {
             fn add(a, b) -> int {
                 return a + b;
@@ -131,14 +131,14 @@ class TestMethods:
         }
         let calc = new Calculator();
         let result = calc.add(5, 3);
-        '''
+        """
         interp = parse_and_run(code)
         result = interp.environment.get("result")
         assert result == 8
-    
+
     def test_method_accessing_properties(self):
         """Test method accessing object properties"""
-        code = '''
+        code = """
         class Counter {
             count = 0;
             
@@ -154,7 +154,7 @@ class TestMethods:
         c.increment();
         c.increment();
         let result = c.get_count();
-        '''
+        """
         interp = parse_and_run(code)
         result = interp.environment.get("result")
         assert result == 2
@@ -162,10 +162,10 @@ class TestMethods:
 
 class TestPropertyAccess:
     """Test property access and assignment"""
-    
+
     def test_get_property(self):
         """Test getting property value"""
-        code = '''
+        code = """
         class Box {
             value = 0;
             
@@ -175,27 +175,27 @@ class TestPropertyAccess:
         }
         let b = new Box(42);
         let x = b.value;
-        '''
+        """
         interp = parse_and_run(code)
         x = interp.environment.get("x")
         assert x == 42
-    
+
     def test_set_property(self):
         """Test setting property value"""
-        code = '''
+        code = """
         class Box {
             value = 0;
         }
         let b = new Box();
         b.value = 100;
-        '''
+        """
         interp = parse_and_run(code)
         b = interp.environment.get("b")
         assert b.properties["value"] == 100
-    
+
     def test_modify_property(self):
         """Test modifying property"""
-        code = '''
+        code = """
         class Counter {
             count = 0;
             
@@ -205,7 +205,7 @@ class TestPropertyAccess:
         }
         let c = new Counter();
         c.count = c.count + 10;
-        '''
+        """
         interp = parse_and_run(code)
         c = interp.environment.get("c")
         assert c.properties["count"] == 10
@@ -213,10 +213,10 @@ class TestPropertyAccess:
 
 class TestComplexClasses:
     """Test complex class scenarios"""
-    
+
     def test_multiple_instances(self):
         """Test creating multiple instances"""
-        code = '''
+        code = """
         class Point {
             x = 0;
             y = 0;
@@ -228,7 +228,7 @@ class TestComplexClasses:
         }
         let p1 = new Point(10, 20);
         let p2 = new Point(30, 40);
-        '''
+        """
         interp = parse_and_run(code)
         p1 = interp.environment.get("p1")
         p2 = interp.environment.get("p2")
@@ -236,10 +236,10 @@ class TestComplexClasses:
         assert p1.properties["y"] == 20
         assert p2.properties["x"] == 30
         assert p2.properties["y"] == 40
-    
+
     def test_method_chain(self):
         """Test chaining method calls"""
-        code = '''
+        code = """
         class StringBuilder {
             text = "";
             
@@ -260,14 +260,14 @@ class TestComplexClasses:
         sb.append(" ");
         sb.append("World");
         let result = sb.get_text();
-        '''
+        """
         interp = parse_and_run(code)
         result = interp.environment.get("result")
         assert result == "Hello World"
-    
+
     def test_this_in_nested_call(self):
         """Test this reference in nested method calls"""
-        code = '''
+        code = """
         class Calculator {
             value = 0;
             
@@ -283,7 +283,7 @@ class TestComplexClasses:
         calc.set(5);
         calc.double();
         let result = calc.value;
-        '''
+        """
         interp = parse_and_run(code)
         result = interp.environment.get("result")
         assert result == 10

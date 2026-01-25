@@ -8,10 +8,10 @@ def query(prompt):
     """
     AI query function (stub implementation for v0.3)
     In v0.4+, this will integrate with actual AI services (OpenAI, Claude, etc.)
-    
+
     Args:
         prompt: The query or question to ask the AI
-        
+
     Returns:
         Stub response indicating AI functionality is not yet implemented
     """
@@ -22,10 +22,10 @@ def eval(code):
     """
     AI code evaluation (stub implementation for v0.3)
     In v0.4+, this will provide AI-powered code analysis
-    
+
     Args:
         code: Code to evaluate
-        
+
     Returns:
         Stub response
     """
@@ -36,7 +36,7 @@ def suggest():
     """
     AI suggestion function (stub implementation for v0.3)
     In v0.4+, this will provide context-aware suggestions
-    
+
     Returns:
         Stub response
     """
