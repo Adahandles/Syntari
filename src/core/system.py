@@ -7,11 +7,11 @@ import time as _time
 import os
 
 
-def print(*args, sep=' ', end='\n', file=None):
+def print(*args, sep=" ", end="\n", file=None):
     """Print to stdout or file"""
     if file is None:
         file = sys.stdout
-    
+
     output = sep.join(str(arg) for arg in args)
     file.write(output + end)
     file.flush()
@@ -20,6 +20,7 @@ def print(*args, sep=' ', end='\n', file=None):
 def trace():
     """Print stack trace for debugging"""
     import traceback
+
     traceback.print_stack()
 
 
@@ -38,6 +39,6 @@ def time():
     return _time.time()
 
 
-def input(prompt=''):
+def input(prompt=""):
     """Read line from stdin"""
-    return sys.stdin.readline().rstrip('\n')
+    return sys.stdin.readline().rstrip("\n")
