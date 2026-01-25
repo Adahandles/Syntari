@@ -56,12 +56,9 @@ class SyntariSession:
             stderr_value = error_buffer.getvalue()
 
             # Store in history with size limit
-            self.history.append(
+            self._add_to_history(
                 {"code": code, "success": True, "output": stdout_value, "result": result}
             )
-            # Trim history if it exceeds max size
-            if len(self.history) > self.MAX_HISTORY_SIZE:
-                self.history.pop(0)
 
             return {
                 "success": True,

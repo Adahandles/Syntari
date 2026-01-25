@@ -13,6 +13,14 @@ from typing import Dict, Any, Optional, Union
 import socket
 import ipaddress
 
+# Export test validation function for test suite use only
+__all__ = [
+    'HTTPResponse', 'HTTPError', 'NetworkError', 'SSRFError', 'WebSocketError',
+    'http_get', 'http_post', 'http_put', 'http_delete',
+    'net_get', 'net_post', 'net_put', 'net_delete', 'net_ws',
+    'WebSocket', '_validate_url_for_tests'
+]
+
 
 class HTTPResponse:
     """Represents an HTTP response."""
