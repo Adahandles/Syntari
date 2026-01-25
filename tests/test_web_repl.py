@@ -3,7 +3,6 @@ Tests for Syntari Web REPL
 """
 
 import pytest
-import asyncio
 from pathlib import Path
 import sys
 
