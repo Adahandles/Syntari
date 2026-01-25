@@ -13,7 +13,15 @@ warnings.warn(
     stacklevel=2,
 )
 
-from src.compiler.bytecode import *
+import src.compiler.bytecode as _bytecode
+
+# Re-export public names from src.compiler.bytecode for backward compatibility
+if hasattr(_bytecode, "__all__"):
+    __all__ = list(_bytecode.__all__)
+else:
+    __all__ = [name for name in dir(_bytecode) if not name.startswith("_")]
+
+globals().update({name: getattr(_bytecode, name) for name in __all__})
 
 if __name__ == "__main__":
     import sys
