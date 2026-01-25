@@ -6,7 +6,6 @@ Provides WebSocket server for executing Syntari code in the browser
 import asyncio
 import json
 import sys
-import os
 from pathlib import Path
 
 # Add parent directory to path
