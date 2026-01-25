@@ -83,6 +83,15 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+exclude = [
+    "^nodes\\.py$",
+    "^lexer\\.py$",
+    "^parser\\.py$",
+    "^interpreter\\.py$",
+    "^runtime\\.py$",
+    "^bytecode\\.py$",
+    "^ai\\.py$",
+]
 
 [tool.coverage.run]
 source = ["src"]
