@@ -11,6 +11,15 @@ import urllib.parse
 import urllib.error
 from typing import Dict, Any, Optional, Union
 import socket
+import ipaddress
+
+# Export test validation function for test suite use only
+__all__ = [
+    'HTTPResponse', 'HTTPError', 'NetworkError', 'SSRFError', 'WebSocketError',
+    'http_get', 'http_post', 'http_put', 'http_delete',
+    'net_get', 'net_post', 'net_put', 'net_delete', 'net_ws',
+    'WebSocket', '_validate_url_for_tests'
+]
 
 
 class HTTPResponse:
@@ -56,6 +65,140 @@ class WebSocketError(NetworkError):
     pass
 
 
+class SSRFError(NetworkError):
+    """Exception for SSRF (Server-Side Request Forgery) prevention."""
+
+    pass
+
+
+# Blocked IP ranges for SSRF prevention
+BLOCKED_IP_RANGES = [
+    ipaddress.ip_network("127.0.0.0/8"),  # Loopback
+    ipaddress.ip_network("10.0.0.0/8"),  # Private network
+    ipaddress.ip_network("172.16.0.0/12"),  # Private network
+    ipaddress.ip_network("192.168.0.0/16"),  # Private network
+    ipaddress.ip_network("169.254.0.0/16"),  # Link-local
+    ipaddress.ip_network("::1/128"),  # IPv6 loopback
+    ipaddress.ip_network("fc00::/7"),  # IPv6 unique local
+    ipaddress.ip_network("fe80::/10"),  # IPv6 link-local
+]
+
+# Allowed URL schemes
+ALLOWED_SCHEMES = {"http", "https"}
+
+
+def _validate_url(url: str) -> None:
+    """
+    Validate URL to prevent SSRF attacks.
+
+    Args:
+        url: The URL to validate
+
+    Raises:
+        SSRFError: If URL is invalid or points to blocked resources
+    """
+    try:
+        parsed = urllib.parse.urlparse(url)
+
+        # Check scheme
+        if parsed.scheme not in ALLOWED_SCHEMES:
+            raise SSRFError(
+                f"Scheme '{parsed.scheme}' not allowed. Only {ALLOWED_SCHEMES} are permitted."
+            )
+
+        # Check for hostname
+        if not parsed.hostname:
+            raise SSRFError("URL must have a valid hostname")
+
+        # Resolve hostname to IP
+        try:
+            # Get IP address
+            ip_str = socket.gethostbyname(parsed.hostname)
+            ip = ipaddress.ip_address(ip_str)
+
+            # Check if IP is in blocked ranges
+            for blocked_range in BLOCKED_IP_RANGES:
+                if ip in blocked_range:
+                    raise SSRFError(
+                        f"Access to private/internal IP addresses is not allowed: {ip_str}"
+                    )
+
+        except socket.gaierror:
+            # Allow DNS resolution failures for public domains
+            # This can happen in test environments or with unreachable domains
+            # We'll just validate that it's not an IP address pointing to private space
+            if parsed.hostname:
+                try:
+                    # Check if hostname is actually an IP address
+                    ip = ipaddress.ip_address(parsed.hostname)
+                    for blocked_range in BLOCKED_IP_RANGES:
+                        if ip in blocked_range:
+                            raise SSRFError(
+                                f"Access to private/internal IP addresses is not allowed: {parsed.hostname}"
+                            )
+                except ValueError:
+                    # Not an IP address, hostname is fine - DNS resolution just failed
+                    pass
+
+    except ValueError as e:
+        raise SSRFError(f"Invalid URL format: {e}")
+
+
+def _validate_url_for_tests(url: str, allow_private: bool = False) -> None:
+    """
+    Validate URL for test environments only. DO NOT USE IN PRODUCTION.
+    
+    This function allows bypassing certain security checks for testing purposes.
+    It should only be called from test code.
+
+    Args:
+        url: The URL to validate
+        allow_private: If True, allows private IP ranges (for testing only)
+
+    Raises:
+        SSRFError: If URL is invalid or points to blocked resources
+    """
+    import os
+    # Runtime check: only allow in test environment
+    if os.environ.get("SYNTARI_ENV") != "test":
+        raise RuntimeError("_validate_url_for_tests can only be used in test environment")
+    
+    try:
+        parsed = urllib.parse.urlparse(url)
+
+        # Check scheme
+        if parsed.scheme not in ALLOWED_SCHEMES:
+            raise SSRFError(
+                f"Scheme '{parsed.scheme}' not allowed. Only {ALLOWED_SCHEMES} are permitted."
+            )
+
+        # Check for hostname
+        if not parsed.hostname:
+            raise SSRFError("URL must have a valid hostname")
+
+        # For tests, allow DNS resolution failures
+        if allow_private:
+            return
+
+        # Resolve hostname to IP
+        try:
+            ip_str = socket.gethostbyname(parsed.hostname)
+            ip = ipaddress.ip_address(ip_str)
+
+            for blocked_range in BLOCKED_IP_RANGES:
+                if ip in blocked_range:
+                    raise SSRFError(
+                        f"Access to private/internal IP addresses is not allowed: {ip_str}"
+                    )
+
+        except socket.gaierror:
+            # Allow DNS resolution failures in tests
+            pass
+
+    except ValueError as e:
+        raise SSRFError(f"Invalid URL format: {e}")
+
+
 def http_get(url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 30) -> HTTPResponse:
     """
     Perform an HTTP GET request.
@@ -69,9 +212,13 @@ def http_get(url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 
         HTTPResponse object with status, headers, and body
 
     Raises:
+        SSRFError: If URL validation fails
         HTTPError: If the HTTP request fails
         NetworkError: If a network error occurs
     """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
     try:
         req = urllib.request.Request(url, method="GET")
 
@@ -117,9 +264,13 @@ def http_post(
         HTTPResponse object with status, headers, and body
 
     Raises:
+        SSRFError: If URL validation fails
         HTTPError: If the HTTP request fails
         NetworkError: If a network error occurs
     """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
     try:
         # Prepare data
         if isinstance(data, dict):
@@ -176,9 +327,13 @@ def http_put(
         HTTPResponse object with status, headers, and body
 
     Raises:
+        SSRFError: If URL validation fails
         HTTPError: If the HTTP request fails
         NetworkError: If a network error occurs
     """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
     try:
         # Prepare data
         if isinstance(data, dict):
@@ -231,9 +386,13 @@ def http_delete(
         HTTPResponse object with status, headers, and body
 
     Raises:
+        SSRFError: If URL validation fails
         HTTPError: If the HTTP request fails
         NetworkError: If a network error occurs
     """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
     try:
         req = urllib.request.Request(url, method="DELETE")
 
@@ -345,6 +504,9 @@ def net_get(url: str) -> Dict[str, Any]:
             "body": response.body,
             "ok": 200 <= response.status_code < 300,
         }
+    except SSRFError as e:
+        # SSRF errors should be caught and reported as security errors
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
     except HTTPError as e:
         return {"status": e.status_code, "error": str(e), "ok": False}
     except NetworkError as e:
@@ -361,6 +523,8 @@ def net_post(url: str, data: Any) -> Dict[str, Any]:
             "body": response.body,
             "ok": 200 <= response.status_code < 300,
         }
+    except SSRFError as e:
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
     except HTTPError as e:
         return {"status": e.status_code, "error": str(e), "ok": False}
     except NetworkError as e:
@@ -377,6 +541,8 @@ def net_put(url: str, data: Any) -> Dict[str, Any]:
             "body": response.body,
             "ok": 200 <= response.status_code < 300,
         }
+    except SSRFError as e:
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
     except HTTPError as e:
         return {"status": e.status_code, "error": str(e), "ok": False}
     except NetworkError as e:
@@ -393,6 +559,8 @@ def net_delete(url: str) -> Dict[str, Any]:
             "body": response.body,
             "ok": 200 <= response.status_code < 300,
         }
+    except SSRFError as e:
+        return {"status": 403, "error": f"Security: {e}", "ok": False}
     except HTTPError as e:
         return {"status": e.status_code, "error": str(e), "ok": False}
     except NetworkError as e:

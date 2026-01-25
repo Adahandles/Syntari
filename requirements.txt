@@ -8,3 +8,7 @@ pytest-cov>=4.0.0
 black>=23.0.0
 flake8>=6.0.0
 mypy>=1.0.0
+
+# Web REPL (v0.4)
+aiohttp>=3.8.0
+aiohttp-cors>=0.7.0
