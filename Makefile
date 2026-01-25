@@ -24,11 +24,10 @@ help:
 	@echo "  make examples     - Run all example programs"
 
 install:
-	pip install -e .
+	pip install -e ".[web]"
 
 dev-install:
-	pip install -e .
-	pip install -r requirements.txt
+	pip install -e ".[web]"
 
 test:
 	pytest tests/

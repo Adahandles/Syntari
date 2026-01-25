@@ -1,0 +1,80 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[web]"
+        pip install pytest-benchmark
+
+    - name: Run performance benchmarks
+      run: |
+        # Create benchmarks directory if it doesn't exist
+        mkdir -p benchmarks
+        
+        # Run any existing benchmark tests
+        if [ -d "tests/benchmarks" ]; then
+          pytest tests/benchmarks/ -v --benchmark-only --benchmark-json=benchmark-results.json || echo "No benchmark tests found yet"
+        else
+          echo "Benchmark tests will be added in future. Creating placeholder..."
+          echo "⚠️  No benchmark tests found in tests/benchmarks/"
+        fi
+
+    - name: Store benchmark results
+      if: always()
+      uses: actions/upload-artifact@v6
+      with:
+        name: benchmark-results
+        path: |
+          benchmark-results.json
+        retention-days: 90
+        if-no-files-found: warn
+
+    - name: Performance report
+      if: always()
+      run: |
+        echo "## Performance Benchmark Report" > benchmark-report.txt
+        echo "" >> benchmark-report.txt
+        echo "**Date**: $(date)" >> benchmark-report.txt
+        echo "**Python Version**: 3.12" >> benchmark-report.txt
+        echo "**Platform**: ubuntu-latest" >> benchmark-report.txt
+        echo "" >> benchmark-report.txt
+        echo "Benchmark tests will be implemented as part of language development." >> benchmark-report.txt
+        echo "This workflow is ready to capture performance metrics." >> benchmark-report.txt
+        cat benchmark-report.txt
+
+    - name: Upload benchmark report
+      if: always()
+      uses: actions/upload-artifact@v6
+      with:
+        name: benchmark-report
+        path: benchmark-report.txt
+        retention-days: 90

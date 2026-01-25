@@ -175,9 +175,7 @@ def _validate_url_for_tests(url: str, allow_private: bool = False) -> None:
 
     # Runtime check: only allow in test environment
     if os.environ.get("SYNTARI_ENV") != "test":
-        raise RuntimeError(
-            "_validate_url_for_tests can only be used in test environment"
-        )
+        raise RuntimeError("_validate_url_for_tests can only be used in test environment")
 
     try:
         parsed = urllib.parse.urlparse(url)
@@ -215,9 +213,7 @@ def _validate_url_for_tests(url: str, allow_private: bool = False) -> None:
         raise SSRFError(f"Invalid URL format: {e}")
 
 
-def http_get(
-    url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 30
-) -> HTTPResponse:
+def http_get(url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 30) -> HTTPResponse:
     """
     Perform an HTTP GET request.
 
