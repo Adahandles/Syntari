@@ -29,10 +29,10 @@ echo ""
 echo "Upgrading pip..."
 python3 -m pip install --upgrade pip
 
-# Install the package in development mode
+# Install the package in development mode with web extras
 echo ""
-echo "Installing Syntari in development mode..."
-python3 -m pip install -e .
+echo "Installing Syntari in development mode (with web extras)..."
+python3 -m pip install -e ".[web]"
 
 # Verify installation
 echo ""
