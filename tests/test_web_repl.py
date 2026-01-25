@@ -4,7 +4,6 @@ Tests for Syntari Web REPL
 
 import pytest
 import asyncio
-import json
 from pathlib import Path
 import sys
 
