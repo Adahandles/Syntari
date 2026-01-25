@@ -86,7 +86,11 @@ def _validate_url(url: str, allow_private: bool = False, skip_dns: bool = False)
     Args:
         url: The URL to validate
         allow_private: If True, allows private IP ranges (default: False)
-        skip_dns: If True, skips DNS resolution check (for testing)
+                      This parameter can be used in controlled environments where
+                      access to internal services is intentionally allowed.
+        skip_dns: If True, skips DNS resolution check (for testing only)
+                 This is used in test environments where DNS resolution may fail
+                 for mock URLs. Should NEVER be True in production.
 
     Raises:
         SSRFError: If URL is invalid or points to blocked resources

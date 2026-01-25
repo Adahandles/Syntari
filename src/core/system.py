@@ -44,7 +44,13 @@ def input(prompt=""):
     # Security: limit input length to prevent memory exhaustion
     MAX_INPUT_LENGTH = 100000  # 100KB
     try:
-        line = sys.stdin.readline(MAX_INPUT_LENGTH)
+        # Display prompt if provided
+        if prompt:
+            sys.stdout.write(prompt)
+            sys.stdout.flush()
+        
+        # Read input with size checking
+        line = sys.stdin.readline()
         if len(line) >= MAX_INPUT_LENGTH:
             raise ValueError(f"Input exceeds maximum allowed length of {MAX_INPUT_LENGTH} bytes")
         return line.rstrip("\n")

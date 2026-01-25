@@ -173,6 +173,7 @@ class SyntariVM:
                 self.stack.append(self.vars[name])
 
             elif op in (0x04, 0x05, 0x06, 0x07):  # arithmetic
+                # Security check: stack underflow
                 if len(self.stack) < 2:
                     raise RuntimeError("Stack underflow in arithmetic operation")
 
