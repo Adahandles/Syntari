@@ -40,5 +40,13 @@ def time():
 
 
 def input(prompt=""):
-    """Read line from stdin"""
-    return sys.stdin.readline().rstrip("\n")
+    """Read line from stdin with size limit"""
+    # Security: limit input length to prevent memory exhaustion
+    MAX_INPUT_LENGTH = 100000  # 100KB
+    try:
+        line = sys.stdin.readline(MAX_INPUT_LENGTH)
+        if len(line) >= MAX_INPUT_LENGTH:
+            raise ValueError(f"Input exceeds maximum allowed length of {MAX_INPUT_LENGTH} bytes")
+        return line.rstrip("\n")
+    except Exception as e:
+        raise RuntimeError(f"Input error: {e}")

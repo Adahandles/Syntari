@@ -9,8 +9,9 @@ import json
 import urllib.request
 import urllib.parse
 import urllib.error
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Union, Set
 import socket
+import ipaddress
 
 
 class HTTPResponse:
@@ -56,6 +57,93 @@ class WebSocketError(NetworkError):
     pass
 
 
+class SSRFError(NetworkError):
+    """Exception for SSRF (Server-Side Request Forgery) prevention."""
+
+    pass
+
+
+# Blocked IP ranges for SSRF prevention
+BLOCKED_IP_RANGES = [
+    ipaddress.ip_network("127.0.0.0/8"),  # Loopback
+    ipaddress.ip_network("10.0.0.0/8"),  # Private network
+    ipaddress.ip_network("172.16.0.0/12"),  # Private network
+    ipaddress.ip_network("192.168.0.0/16"),  # Private network
+    ipaddress.ip_network("169.254.0.0/16"),  # Link-local
+    ipaddress.ip_network("::1/128"),  # IPv6 loopback
+    ipaddress.ip_network("fc00::/7"),  # IPv6 unique local
+    ipaddress.ip_network("fe80::/10"),  # IPv6 link-local
+]
+
+# Allowed URL schemes
+ALLOWED_SCHEMES = {"http", "https"}
+
+
+def _validate_url(url: str, allow_private: bool = False, skip_dns: bool = False) -> None:
+    """
+    Validate URL to prevent SSRF attacks.
+
+    Args:
+        url: The URL to validate
+        allow_private: If True, allows private IP ranges (default: False)
+        skip_dns: If True, skips DNS resolution check (for testing)
+
+    Raises:
+        SSRFError: If URL is invalid or points to blocked resources
+    """
+    try:
+        parsed = urllib.parse.urlparse(url)
+
+        # Check scheme
+        if parsed.scheme not in ALLOWED_SCHEMES:
+            raise SSRFError(
+                f"Scheme '{parsed.scheme}' not allowed. Only {ALLOWED_SCHEMES} are permitted."
+            )
+
+        # Check for hostname
+        if not parsed.hostname:
+            raise SSRFError("URL must have a valid hostname")
+
+        # Skip DNS resolution in test environments
+        if skip_dns:
+            return
+
+        # Resolve hostname to IP
+        try:
+            # Get IP address
+            ip_str = socket.gethostbyname(parsed.hostname)
+            ip = ipaddress.ip_address(ip_str)
+
+            # Check if IP is in blocked ranges (unless allow_private is True)
+            if not allow_private:
+                for blocked_range in BLOCKED_IP_RANGES:
+                    if ip in blocked_range:
+                        raise SSRFError(
+                            f"Access to private/internal IP addresses is not allowed: {ip_str}"
+                        )
+
+        except socket.gaierror:
+            # Allow DNS resolution failures for public domains
+            # This can happen in test environments or with unreachable domains
+            # We'll just validate that it's not an IP address pointing to private space
+            if parsed.hostname:
+                try:
+                    # Check if hostname is actually an IP address
+                    ip = ipaddress.ip_address(parsed.hostname)
+                    if not allow_private:
+                        for blocked_range in BLOCKED_IP_RANGES:
+                            if ip in blocked_range:
+                                raise SSRFError(
+                                    f"Access to private/internal IP addresses is not allowed: {parsed.hostname}"
+                                )
+                except ValueError:
+                    # Not an IP address, hostname is fine - DNS resolution just failed
+                    pass
+
+    except ValueError as e:
+        raise SSRFError(f"Invalid URL format: {e}")
+
+
 def http_get(url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 30) -> HTTPResponse:
     """
     Perform an HTTP GET request.
@@ -69,9 +157,13 @@ def http_get(url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 
         HTTPResponse object with status, headers, and body
 
     Raises:
+        SSRFError: If URL validation fails
         HTTPError: If the HTTP request fails
         NetworkError: If a network error occurs
     """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
     try:
         req = urllib.request.Request(url, method="GET")
 
@@ -117,9 +209,13 @@ def http_post(
         HTTPResponse object with status, headers, and body
 
     Raises:
+        SSRFError: If URL validation fails
         HTTPError: If the HTTP request fails
         NetworkError: If a network error occurs
     """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
     try:
         # Prepare data
         if isinstance(data, dict):
@@ -176,9 +272,13 @@ def http_put(
         HTTPResponse object with status, headers, and body
 
     Raises:
+        SSRFError: If URL validation fails
         HTTPError: If the HTTP request fails
         NetworkError: If a network error occurs
     """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
     try:
         # Prepare data
         if isinstance(data, dict):
@@ -231,9 +331,13 @@ def http_delete(
         HTTPResponse object with status, headers, and body
 
     Raises:
+        SSRFError: If URL validation fails
         HTTPError: If the HTTP request fails
         NetworkError: If a network error occurs
     """
+    # Validate URL to prevent SSRF
+    _validate_url(url)
+
     try:
         req = urllib.request.Request(url, method="DELETE")
 
