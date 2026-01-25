@@ -5,7 +5,7 @@ Tests for Syntari Bytecode Compiler and VM
 import pytest
 import os
 import tempfile
-from src.compiler.bytecode import BytecodeGenerator, compile_file, OPCODES
+from src.compiler.bytecode import BytecodeGenerator, compile_file
 from src.vm.runtime import SyntariVM, VMSecurityError
 from src.interpreter.lexer import tokenize
 from src.interpreter.parser import Parser
