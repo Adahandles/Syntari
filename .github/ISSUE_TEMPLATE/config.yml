@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://github.com/Adahandles/Syntari/blob/main/README.md
+    about: Read the documentation and getting started guide
+  - name: 💬 Discussions
+    url: https://github.com/Adahandles/Syntari/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 🔒 Security Vulnerability
+    url: mailto:legal@deuos.io
+    about: Report a security vulnerability privately (DO NOT create a public issue)

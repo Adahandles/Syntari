@@ -1,0 +1,97 @@
+name: Dependency Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run weekly on Monday at 3:00 AM UTC
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-scan:
+    name: Scan Python Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install safety pip-audit
+
+    - name: Run Safety check
+      run: |
+        safety check --json || true
+      continue-on-error: true
+
+    - name: Run pip-audit
+      run: |
+        pip-audit --desc --format json || true
+      continue-on-error: true
+
+    - name: Generate dependency tree
+      run: |
+        pip install pipdeptree
+        pipdeptree --json-tree > dependency-tree.json || true
+      continue-on-error: true
+
+    - name: Upload dependency scan results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: dependency-scan-results
+        path: |
+          dependency-tree.json
+        retention-days: 30
+
+  license-check:
+    name: Check Dependency Licenses
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .
+        pip install pip-licenses
+
+    - name: Check licenses
+      run: |
+        pip-licenses --format=markdown --output-file=licenses.md
+        pip-licenses --format=json --output-file=licenses.json
+        echo "## Dependency Licenses" >> $GITHUB_STEP_SUMMARY
+        cat licenses.md >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload license information
+      uses: actions/upload-artifact@v4
+      with:
+        name: license-information
+        path: |
+          licenses.md
+          licenses.json
+        retention-days: 90
