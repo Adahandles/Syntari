@@ -9,7 +9,7 @@ import json
 import urllib.request
 import urllib.parse
 import urllib.error
-from typing import Dict, Any, Optional, Union, Set
+from typing import Dict, Any, Optional, Union
 import socket
 import ipaddress
 
