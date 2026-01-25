@@ -6,7 +6,6 @@ Provides CLI interface and REPL for Syntari v0.3
 
 import sys
 import argparse
-import os
 from pathlib import Path
 from typing import Optional
 
