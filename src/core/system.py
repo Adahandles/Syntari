@@ -48,7 +48,7 @@ def input(prompt=""):
         if prompt:
             sys.stdout.write(prompt)
             sys.stdout.flush()
-        
+
         # Read input with size checking
         line = sys.stdin.readline()
         if len(line) > MAX_INPUT_LENGTH:
