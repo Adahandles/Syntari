@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syntari Web REPL - v0.4</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            color: #667eea;
+        }
+
+        header .version {
+            color: #764ba2;
+            font-size: 0.9rem;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status.connected {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.disconnected {
+            background: #ef4444;
+            color: white;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-panel {
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .output-panel {
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .panel-header {
+            padding: 0.75rem 1rem;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        #editor {
+            flex: 1;
+            padding: 1rem;
+            font-size: 14px;
+            line-height: 1.6;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: inherit;
+            overflow: auto;
+        }
+
+        #output {
+            flex: 1;
+            padding: 1rem;
+            overflow: auto;
+            background: #1e293b;
+            color: #e2e8f0;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .output-line {
+            margin: 0.5rem 0;
+            padding: 0.25rem 0;
+        }
+
+        .output-line.input {
+            color: #60a5fa;
+        }
+
+        .output-line.output {
+            color: #10b981;
+        }
+
+        .output-line.error {
+            color: #f87171;
+        }
+
+        .output-line.result {
+            color: #fbbf24;
+            font-style: italic;
+        }
+
+        .controls {
+            padding: 1rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 0.5rem;
+            border-radius: 0 0 8px 8px;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .examples {
+            margin-top: 0.5rem;
+        }
+
+        .examples select {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-family: inherit;
+            width: 100%;
+            background: white;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column;
+            }
+
+            .editor-panel, .output-panel {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>Syntari Web REPL</h1>
+            <span class="version">v0.4.0</span>
+        </div>
+        <div>
+            <span id="status" class="status disconnected">Disconnected</span>
+        </div>
+    </header>
+
+    <main>
+        <div class="panel editor-panel">
+            <div class="panel-header">Code Editor</div>
+            <textarea id="editor" placeholder="// Write your Syntari code here...
+// Example:
+let x = 42
+print(x * 2)">// Welcome to Syntari Web REPL!
+// Try some examples below or write your own code
+
+let x = 10
+let y = 20
+print(x + y)</textarea>
+            <div class="controls">
+                <button id="runBtn" class="btn-primary">▶ Run (Ctrl+Enter)</button>
+                <button id="clearBtn" class="btn-secondary">Clear Output</button>
+                <button id="resetBtn" class="btn-danger">Reset Session</button>
+            </div>
+            <div class="examples">
+                <select id="exampleSelect">
+                    <option value="">-- Load Example --</option>
+                    <option value="hello">Hello World</option>
+                    <option value="arithmetic">Arithmetic</option>
+                    <option value="variables">Variables</option>
+                    <option value="functions">Functions</option>
+                    <option value="control">Control Flow</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="panel output-panel">
+            <div class="panel-header">Output</div>
+            <div id="output">
+                <div class="output-line">Syntari Web REPL v0.4.0</div>
+                <div class="output-line">Connecting to server...</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // WebSocket connection
+        let ws = null;
+        const statusEl = document.getElementById('status');
+        const outputEl = document.getElementById('output');
+        const editorEl = document.getElementById('editor');
+        const runBtn = document.getElementById('runBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const exampleSelect = document.getElementById('exampleSelect');
+
+        // Examples
+        const examples = {
+            hello: `// Hello World
+print("Hello, Syntari!")`,
+            arithmetic: `// Arithmetic Operations
+let a = 10
+let b = 5
+
+print("Addition:", a + b)
+print("Subtraction:", a - b)
+print("Multiplication:", a * b)
+print("Division:", a / b)`,
+            variables: `// Variable Declarations
+let x = 42
+const y = "Hello"
+
+print("x =", x)
+print("y =", y)
+
+x = x + 1
+print("x after increment =", x)`,
+            functions: `// Function Definitions
+fn add(a, b) {
+    return a + b
+}
+
+fn greet(name) {
+    print("Hello,", name)
+}
+
+print("5 + 3 =", add(5, 3))
+greet("Syntari")`,
+            control: `// Control Flow
+let x = 10
+
+if x > 5 {
+    print("x is greater than 5")
+} else {
+    print("x is 5 or less")
+}
+
+let i = 0
+while i < 5 {
+    print("Count:", i)
+    i = i + 1
+}`
+        };
+
+        // Connect to WebSocket
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host || 'localhost:8080';
+            ws = new WebSocket(`${protocol}//${host}/ws`);
+
+            ws.onopen = () => {
+                statusEl.className = 'status connected';
+                statusEl.textContent = 'Connected';
+                addOutput('Connected to Syntari server', 'output');
+            };
+
+            ws.onclose = () => {
+                statusEl.className = 'status disconnected';
+                statusEl.textContent = 'Disconnected';
+                addOutput('Disconnected from server', 'error');
+                setTimeout(connect, 3000);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                addOutput('Connection error', 'error');
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                handleMessage(message);
+            };
+        }
+
+        // Handle incoming messages
+        function handleMessage(message) {
+            if (message.type === 'result') {
+                const data = message.data;
+                if (data.success) {
+                    if (data.output) {
+                        addOutput(data.output, 'output');
+                    }
+                    if (data.result !== null) {
+                        addOutput(`=> ${data.result}`, 'result');
+                    }
+                } else {
+                    addOutput(data.error, 'error');
+                }
+            } else if (message.type === 'cleared') {
+                outputEl.innerHTML = '';
+                addOutput('Output cleared', 'output');
+            } else if (message.type === 'reset') {
+                outputEl.innerHTML = '';
+                addOutput('Session reset', 'output');
+            } else if (message.type === 'error') {
+                addOutput(message.data.error, 'error');
+            }
+        }
+
+        // Add output line
+        function addOutput(text, className = 'output') {
+            const div = document.createElement('div');
+            div.className = `output-line ${className}`;
+            div.textContent = text;
+            outputEl.appendChild(div);
+            outputEl.scrollTop = outputEl.scrollHeight;
+        }
+
+        // Execute code
+        function executeCode() {
+            const code = editorEl.value.trim();
+            if (!code) return;
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                addOutput(`>>> ${code.split('\n')[0]}${code.split('\n').length > 1 ? '...' : ''}`, 'input');
+                ws.send(JSON.stringify({
+                    command: 'execute',
+                    code: code
+                }));
+            } else {
+                addOutput('Not connected to server', 'error');
+            }
+        }
+
+        // Clear output
+        function clearOutput() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ command: 'clear' }));
+            }
+        }
+
+        // Reset session
+        function resetSession() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ command: 'reset' }));
+            }
+        }
+
+        // Load example
+        function loadExample(exampleKey) {
+            if (exampleKey && examples[exampleKey]) {
+                editorEl.value = examples[exampleKey];
+            }
+        }
+
+        // Event listeners
+        runBtn.addEventListener('click', executeCode);
+        clearBtn.addEventListener('click', clearOutput);
+        resetBtn.addEventListener('click', resetSession);
+        exampleSelect.addEventListener('change', (e) => {
+            loadExample(e.target.value);
+            e.target.value = '';
+        });
+
+        // Keyboard shortcuts
+        editorEl.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                executeCode();
+            }
+        });
+
+        // Connect on load
+        connect();
+    </script>
+</body>
+</html>
