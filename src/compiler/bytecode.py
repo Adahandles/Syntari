@@ -377,16 +377,17 @@ class BytecodeGenerator:
 
         return bytes(data)
 
-    def save(self, filename):
+    def save(self, filename, verbose=True):
         """Save bytecode to file"""
         self.finalize()
         blob = self.to_bytes()
         with open(filename, "wb") as f:
             f.write(blob)
-        print(f"[Syntari Compiler] Wrote bytecode → {filename}")
+        if verbose:
+            print(f"[Syntari Compiler] Wrote bytecode → {filename}")
 
 
-def compile_file(source_path, output_path=None):
+def compile_file(source_path, output_path=None, verbose=True):
     """Compile a Syntari source file to bytecode"""
     from src.interpreter.lexer import tokenize
     from src.interpreter.parser import Parser
@@ -407,7 +408,7 @@ def compile_file(source_path, output_path=None):
         base, _ = os.path.splitext(source_path)
         output_path = base + ".sbc"
 
-    gen.save(output_path)
+    gen.save(output_path, verbose=verbose)
     return output_path
 
 

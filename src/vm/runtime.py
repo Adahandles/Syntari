@@ -202,7 +202,7 @@ class SyntariVM:
             return False
         return True
 
-    def run(self):
+    def run(self, verbose=True):
         """Execute the loaded bytecode"""
         while self.ip < len(self.code):
             # Security check: prevent infinite loops
@@ -390,14 +390,15 @@ class SyntariVM:
             else:
                 raise RuntimeError(f"Unknown opcode 0x{op:02X}")
 
-        print("[Syntari VM] Execution complete.")
+        if verbose:
+            print("[Syntari VM] Execution complete.")
 
 
-def run_vm(path):
+def run_vm(path, verbose=True):
     """Load and run a bytecode file"""
     vm = SyntariVM()
     vm.load_sbc(path)
-    vm.run()
+    vm.run(verbose=verbose)
 
 
 if __name__ == "__main__":
