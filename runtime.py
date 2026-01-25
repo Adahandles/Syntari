@@ -13,7 +13,12 @@ warnings.warn(
     stacklevel=2,
 )
 
-from src.vm.runtime import *
+import src.vm.runtime as _runtime
+
+# Re-export public names from src.vm.runtime for backward compatibility
+for _name in dir(_runtime):
+    if not _name.startswith("_"):
+        globals()[_name] = getattr(_runtime, _name)
 
 if __name__ == "__main__":
     import sys
