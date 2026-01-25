@@ -1,0 +1,34 @@
+# CODEOWNERS file for Syntari
+# 
+# This file defines code ownership for the repository.
+# GitHub will automatically request reviews from these owners when PRs touch the respective files.
+# 
+# Learn more: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners - default for everything in the repo
+* @Adahandles
+
+# Security and configuration files
+SECURITY.md @Adahandles
+.github/workflows/*.yml @Adahandles
+.github/dependabot.yml @Adahandles
+.github/copilot-instructions.md @Adahandles
+pyproject.toml @Adahandles
+setup.py @Adahandles
+requirements.txt @Adahandles
+
+# Core language implementation
+src/core/ @Adahandles
+src/interpreter/ @Adahandles
+
+# Tests
+tests/ @Adahandles
+
+# Documentation
+*.md @Adahandles
+docs/ @Adahandles
+
+# Build and development configuration
+Makefile @Adahandles
+setup.sh @Adahandles
+.gitignore @Adahandles
