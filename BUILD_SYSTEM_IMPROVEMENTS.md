@@ -277,7 +277,7 @@ This PR successfully transforms the Syntari build system from a warning-filled, 
 ---
 
 **Last Updated**: 2026-01-25  
-**Commits**: 6 commits (dbb117a through 8c9c195)  
-**Files Changed**: pyproject.toml, Makefile, setup.sh, requirements.txt, .github/workflows/*.yml  
+**Commits**: 7 commits (85654a3 through cf07c79)  
+**Files Changed**: pyproject.toml, Makefile, setup.sh, requirements.txt, .github/workflows/*.yml, BUILD_SYSTEM_IMPROVEMENTS.md  
 **Tests**: 296 passing, 74% coverage  
 **CI/CD**: 7 workflows operational
