@@ -373,7 +373,9 @@ class SyntariVM:
                         )
 
                     # For now, user-defined functions are not implemented
-                    raise NotImplementedError(f"User-defined function calls not yet implemented: {func_name}")
+                    raise NotImplementedError(
+                        f"User-defined function calls not yet implemented: {func_name}"
+                    )
 
             elif op == 0x31:  # RETURN
                 if not self.call_stack:

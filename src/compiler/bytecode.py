@@ -309,7 +309,7 @@ class BytecodeGenerator:
         # First pass: calculate byte offsets for each instruction and map labels
         label_map = {}
         byte_offset = 0
-        
+
         for item in self.instructions:
             if item[0] == "LABEL":
                 # Map label to current byte offset
@@ -318,7 +318,7 @@ class BytecodeGenerator:
                 # Calculate size of this instruction in bytes
                 opcode, args = item
                 byte_offset += 1  # opcode byte
-                
+
                 for arg in args:
                     if isinstance(arg, int):
                         byte_offset += 4  # 32-bit integer
