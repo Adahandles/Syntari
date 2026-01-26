@@ -96,6 +96,14 @@ security-report.txt
 security-scan-report.json
 bandit-report.json
 safety-report.json
+pip-audit.json
+pip-audit-report.json
+semgrep-report.json
+sbom-*.json
+licenses.json
+licenses.md
+dependency-tree.json
+pip-packages.json
 
 # Logs
 *.log

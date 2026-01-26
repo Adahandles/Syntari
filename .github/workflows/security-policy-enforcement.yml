@@ -1,0 +1,305 @@
+name: Security Policy Enforcement
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+  schedule:
+    # Daily security checks at 4 AM UTC
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+  issues: write
+
+jobs:
+  # Check for sensitive files and data
+  sensitive-data-check:
+    name: Scan for Sensitive Data
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Check for secrets in code
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        extra_args: --only-verified --json --fail
+
+    - name: Scan for API keys and tokens
+      run: |
+        echo "Scanning for common secret patterns..."
+        
+        # Check for common secret patterns
+        if grep -r -E "(api[_-]?key|secret[_-]?key|private[_-]?key|token|password)" --include="*.py" --include="*.yml" --include="*.yaml" .; then
+          echo "⚠️ Warning: Found potential secret references in code"
+          echo "Please verify these are not hardcoded secrets"
+        else
+          echo "✅ No obvious secret patterns found"
+        fi
+      continue-on-error: true
+
+    - name: Check for sensitive files
+      run: |
+        echo "Checking for sensitive files..."
+        
+        SENSITIVE_FILES=(
+          ".env"
+          "*.pem"
+          "*.key"
+          "*.cert"
+          "*.p12"
+          "*.pfx"
+          "id_rsa"
+          "id_dsa"
+          "credentials.json"
+        )
+        
+        FOUND_FILES=()
+        for pattern in "${SENSITIVE_FILES[@]}"; do
+          if find . -name "$pattern" -not -path "./.git/*" | grep -q .; then
+            FOUND_FILES+=("$pattern")
+          fi
+        done
+        
+        if [ ${#FOUND_FILES[@]} -gt 0 ]; then
+          echo "❌ ERROR: Found sensitive files that should not be committed:"
+          printf '%s\n' "${FOUND_FILES[@]}"
+          exit 1
+        else
+          echo "✅ No sensitive files found"
+        fi
+
+  # Verify dependencies are secure
+  dependency-security:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[web]"
+        pip install pip-audit safety
+
+    - name: Run pip-audit
+      run: |
+        pip-audit --desc --format json --output pip-audit.json || true
+        pip-audit --desc
+      continue-on-error: false
+
+    - name: Check for known vulnerabilities with Safety
+      run: |
+        safety check --json --output safety-report.json || true
+        safety check
+      continue-on-error: true
+
+    - name: Verify no malicious packages
+      run: |
+        echo "Checking PyPI package sources..."
+        # List all installed packages and their sources
+        pip list --format=json > installed-packages.json
+        
+        # Check for typosquatting (basic check)
+        if pip list | grep -iE "(requets|urlib|numppy|pandsa)"; then
+          echo "❌ Potential typosquatting detected!"
+          exit 1
+        fi
+        
+        echo "✅ No obvious malicious packages detected"
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: dependency-security-reports
+        path: |
+          pip-audit.json
+          safety-report.json
+          installed-packages.json
+
+  # Enforce code quality and security standards
+  code-security-standards:
+    name: Code Security Standards
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install security tools
+      run: |
+        pip install bandit semgrep
+
+    - name: Run Bandit security linter
+      run: |
+        bandit -r src/ -ll -f json -o bandit-report.json || true
+        bandit -r src/ -ll
+      continue-on-error: true
+
+    - name: Run Semgrep security rules
+      run: |
+        semgrep --config=auto --json --output=semgrep-report.json src/ || true
+        semgrep --config=auto src/
+      continue-on-error: true
+
+    - name: Check file permissions
+      run: |
+        echo "Checking for overly permissive files..."
+        
+        # Find files with write permissions for group/others
+        if find . -type f -perm /022 -not -path "./.git/*" | grep -q .; then
+          echo "⚠️ Warning: Found files with write permissions for group/others"
+          find . -type f -perm /022 -not -path "./.git/*"
+        else
+          echo "✅ File permissions are secure"
+        fi
+
+    - name: Verify Python path security
+      run: |
+        python3 << 'EOF'
+        import sys
+        import os
+        
+        print("Checking Python path security...")
+        
+        insecure_paths = [p for p in sys.path if p.startswith('/tmp') or p == '']
+        
+        if insecure_paths:
+            print(f"⚠️ Warning: Insecure paths in PYTHONPATH: {insecure_paths}")
+        else:
+            print("✅ Python path is secure")
+        EOF
+
+    - name: Upload code security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: code-security-reports
+        path: |
+          bandit-report.json
+          semgrep-report.json
+
+  # Check for license compliance
+  license-compliance:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        pip install -e ".[web]"
+        pip install pip-licenses
+
+    - name: Check dependency licenses
+      run: |
+        echo "Checking dependency licenses..."
+        pip-licenses --format=json --output-file=licenses.json
+        pip-licenses --format=markdown --output-file=licenses.md
+        pip-licenses
+
+    - name: Verify GPL compatibility
+      run: |
+        # Check for incompatible licenses (GPL in proprietary code)
+        if pip-licenses | grep -iE "(GPL|AGPL)" | grep -v LGPL; then
+          echo "⚠️ Warning: Found GPL-licensed dependencies"
+          echo "Verify compatibility with proprietary license"
+        fi
+
+    - name: Upload license report
+      uses: actions/upload-artifact@v4
+      with:
+        name: license-report
+        path: |
+          licenses.json
+          licenses.md
+
+  # Summary and PR comment
+  security-summary:
+    name: Security Check Summary
+    needs: [sensitive-data-check, dependency-security, code-security-standards, license-compliance]
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'pull_request'
+    
+    steps:
+    - name: Comment PR with security summary
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: checks } = await github.rest.checks.listForRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: context.payload.pull_request.head.sha
+          });
+          
+          let comment = '## 🔒 Security Policy Enforcement Summary\n\n';
+          
+          const jobs = [
+            'sensitive-data-check',
+            'dependency-security', 
+            'code-security-standards',
+            'license-compliance'
+          ];
+          
+          let allPassed = true;
+          
+          for (const job of jobs) {
+            const check = checks.check_runs.find(c => c.name.includes(job));
+            if (check) {
+              const status = check.conclusion === 'success' ? '✅' : 
+                           check.conclusion === 'failure' ? '❌' : '⚠️';
+              comment += `${status} **${job}**: ${check.conclusion}\n`;
+              if (check.conclusion !== 'success') allPassed = false;
+            }
+          }
+          
+          comment += '\n';
+          
+          if (allPassed) {
+            comment += '✅ **All security checks passed!**\n\n';
+            comment += 'This PR meets all security policy requirements.\n';
+          } else {
+            comment += '⚠️ **Some security checks failed or have warnings**\n\n';
+            comment += 'Please review the failed checks and address any issues.\n';
+          }
+          
+          comment += '\n📊 Detailed reports available in workflow artifacts.\n';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

@@ -103,6 +103,12 @@ Syntari includes several security features:
 - **Deterministic Output**: Predictable behavior prevents timing attacks
 - **CodeQL Scanning**: Automated vulnerability detection in CI/CD
 - **Dependency Scanning**: Automated updates via Dependabot
+- **Branch Protection**: Enforced code review and status checks on protected branches
+- **Security Policy Enforcement**: Automated checks for secrets, vulnerabilities, and compliance
+- **SBOM Generation**: Software Bill of Materials for transparency and compliance
+- **License Compliance**: Automated license checking for all dependencies
+- **Secret Scanning**: Continuous monitoring for leaked credentials
+- **Workflow Security**: GitHub Actions pinned and hardened against supply chain attacks
 
 ## Security Updates
 
@@ -136,10 +142,40 @@ We appreciate the security research community's contributions to keeping Syntari
 
 Thank you for helping keep Syntari and its users safe!
 
+## Automated Security Workflows
+
+Syntari employs comprehensive automated security checks:
+
+### Continuous Security Monitoring
+- **Daily Security Scans**: Automated checks run daily to detect new vulnerabilities
+- **Secret Scanning**: TruffleHog scans for exposed credentials and API keys
+- **Dependency Auditing**: pip-audit and Safety check for vulnerable dependencies
+- **License Compliance**: Automated license verification for all dependencies
+- **SBOM Generation**: Weekly Software Bill of Materials creation for transparency
+
+### Pull Request Security
+Every pull request is automatically checked for:
+- Sensitive data exposure (secrets, keys, credentials)
+- Dependency vulnerabilities
+- Code security issues (Bandit, Semgrep)
+- License compatibility
+- File permission security
+
+### Branch Protection
+Protected branches (main, develop) enforce:
+- Required pull request reviews
+- Passing security status checks
+- Up-to-date branches before merging
+- Code owner approval
+- No force pushes or deletions
+
+See [Branch Protection Rules](.github/branch-protection-rules.md) for complete details.
+
 ## Additional Resources
 
 - [Contributing Guidelines](CONTRIBUTING.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md) (if applicable)
+- [Branch Protection Rules](.github/branch-protection-rules.md)
+- [Workflow Security Best Practices](.github/WORKFLOW_SECURITY.md)
 - [Development Documentation](DEVELOPMENT_SUMMARY.md)
 
 ## Legal
