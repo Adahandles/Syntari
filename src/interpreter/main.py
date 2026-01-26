@@ -351,6 +351,8 @@ Examples:
   syntari --compile script.syn    # Compile to bytecode
   syntari --run script.sbc        # Run bytecode
   syntari --profile script.syn    # Run with performance profiling
+  syntari --debug script.syn      # Run with interactive debugger
+  syntari --lsp                   # Start LSP server for IDE integration
   syntari --verbose script.syn    # Run with verbose output
         """,
     )
@@ -368,6 +370,10 @@ Examples:
     parser.add_argument("--run", action="store_true", help="Run bytecode file (.sbc)")
 
     parser.add_argument("--profile", action="store_true", help="Run with performance profiling")
+
+    parser.add_argument("--debug", action="store_true", help="Run with interactive debugger")
+
+    parser.add_argument("--lsp", action="store_true", help="Start LSP server for IDE integration")
 
     parser.add_argument(
         "--profile-format",
@@ -390,10 +396,60 @@ Examples:
     if args.repl:
         return run_repl()
 
+    # LSP mode
+    if args.lsp:
+        try:
+            from src.tools.lsp import LSPServer
+
+            print("Starting Syntari LSP server...", file=sys.stderr)
+            server = LSPServer()
+            server.start()
+            return 0
+        except Exception as e:
+            print(f"LSP server error: {e}", file=sys.stderr)
+            if args.verbose:
+                import traceback
+
+                traceback.print_exc()
+            return 1
+
     # File required for other modes
     if not args.file:
         parser.print_help()
         return 1
+
+    # Debug mode
+    if args.debug:
+        try:
+            from src.tools.debugger import SyntariDebugger, DebuggableInterpreter
+
+            # Validate and read file
+            file_path = _validate_file_path(args.file, {".syn"})
+            with open(file_path, "r", encoding="utf-8") as f:
+                source_code = f.read()
+
+            # Tokenize and parse
+            if args.verbose:
+                print(f"Parsing {file_path}...", file=sys.stderr)
+            tokens = tokenize(source_code)
+            program = parse(tokens)
+
+            # Create debugger and run
+            debugger = SyntariDebugger()
+            interpreter = DebuggableInterpreter(debugger)
+            debugger.run(program, interpreter)
+            return 0
+
+        except (LexerError, ParseError, SyntariRuntimeError) as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 1
+        except Exception as e:
+            print(f"Debug error: {e}", file=sys.stderr)
+            if args.verbose:
+                import traceback
+
+                traceback.print_exc()
+            return 1
 
     # Profile mode
     if args.profile:

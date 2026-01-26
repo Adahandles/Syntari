@@ -1,4 +1,4 @@
-.PHONY: help install dev-install test test-verbose lint format clean build run repl examples security security-scan benchmark profile
+.PHONY: help install dev-install test test-verbose lint format clean build run repl examples debug lsp security security-scan benchmark profile
 
 help:
 	@echo "Syntari Development Commands"
@@ -14,6 +14,10 @@ help:
 	@echo "  make lint         - Run linters (flake8, mypy)"
 	@echo "  make format       - Format code with black"
 	@echo "  make clean        - Remove build artifacts and cache"
+	@echo ""
+	@echo "Developer Tools:"
+	@echo "  make debug FILE=<file> - Run with interactive debugger"
+	@echo "  make lsp          - Start LSP server for IDE integration"
 	@echo ""
 	@echo "Performance:"
 	@echo "  make benchmark    - Run performance benchmarks"
@@ -80,6 +84,19 @@ run:
 
 repl:
 	python3 main.py --repl
+
+debug:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make debug FILE=path/to/script.syn"; \
+		exit 1; \
+	fi
+	@echo "Starting debugger for $(FILE)..."
+	@python3 main.py --debug $(FILE)
+
+lsp:
+	@echo "Starting Syntari LSP server..."
+	@echo "Connect your IDE to stdin/stdout..."
+	@python3 main.py --lsp
 
 examples:
 	@echo "Running examples..."
