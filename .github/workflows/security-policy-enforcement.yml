@@ -129,7 +129,7 @@ jobs:
         echo "✅ No obvious malicious packages detected"
 
     - name: Upload security reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4.5.0
       if: always()
       with:
         name: dependency-security-reports
@@ -197,7 +197,7 @@ jobs:
         EOF
 
     - name: Upload code security reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4.5.0
       if: always()
       with:
         name: code-security-reports
@@ -240,7 +240,7 @@ jobs:
         fi
 
     - name: Upload license report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4.5.0
       with:
         name: license-report
         path: |
