@@ -1,0 +1,38 @@
+// Calculator Application
+
+fn add(a, b) {
+    return a + b
+}
+
+fn subtract(a, b) {
+    return a - b
+}
+
+fn multiply(a, b) {
+    return a * b
+}
+
+fn divide(a, b) {
+    if (b == 0) {
+        print("Error: Division by zero")
+        return 0
+    }
+    return a / b
+}
+
+fn main() {
+    print("=== Calculator App ===")
+    
+    let x = 10
+    let y = 5
+    
+    print("x =", x)
+    print("y =", y)
+    print("")
+    print("x + y =", add(x, y))
+    print("x - y =", subtract(x, y))
+    print("x * y =", multiply(x, y))
+    print("x / y =", divide(x, y))
+}
+
+main()

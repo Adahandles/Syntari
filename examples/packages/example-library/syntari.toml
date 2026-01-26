@@ -1,0 +1,23 @@
+[package]
+name = "math-utils"
+version = "2.1.0"
+description = "Mathematical utility functions"
+authors = ["Syntari Team <team@syntari.dev>"]
+license = "MIT"
+homepage = "https://syntari.dev/packages/math-utils"
+repository = "https://github.com/syntari/math-utils"
+keywords = ["math", "utilities", "algorithms"]
+
+[dependencies]
+# Example dependencies with different version constraints
+# core = "^1.0.0"          # Caret: compatible with 1.x.x
+# validation = "~2.3.0"    # Tilde: compatible with 2.3.x
+# logging = ">=1.5.0"      # Greater than or equal
+
+[dev-dependencies]
+# test-framework = "^1.0.0"
+# benchmark-suite = "^2.0.0"
+
+[build]
+# No entry point (library)
+compile_to_bytecode = false
