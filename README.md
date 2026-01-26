@@ -1,6 +1,6 @@
 # Syntari Programming Language
 
-**Version:** 0.3  
+**Version:** 0.4 (in development)  
 **Owner:** DeuOS, LLC  
 **License:** [Commercial License](Syntari_Commercial_License_DeuOS.md)
 
@@ -31,6 +31,12 @@ python3 main.py hello_world.syn
 # Start interactive REPL
 python3 main.py --repl
 
+# Profile performance
+python3 main.py --profile examples/functions.syn
+
+# Run benchmarks
+make benchmark
+
 # Try examples
 python3 main.py examples/functions.syn
 
@@ -43,6 +49,8 @@ make test
 👨‍💻 **[Read Contributing Guide](CONTRIBUTING.md)** - Set up your development environment
 
 🔒 **[Read Security Guide](SECURITY_GUIDE.md)** - Security best practices and tools
+
+⚡ **[Read Performance Guide](PERFORMANCE_PROFILING.md)** - Profiling and benchmarking tools
 
 ---
 
@@ -64,6 +72,29 @@ pre-commit install    # Set up hooks
 ```
 
 See [SECURITY_GUIDE.md](SECURITY_GUIDE.md) for details.
+
+---
+
+## ⚡ Performance
+
+Syntari includes comprehensive performance profiling and benchmarking:
+
+- **Performance Profiler** - Track execution metrics, hot paths, function timing
+- **Benchmark Suite** - 5 benchmarks covering different workloads
+- **Comparative Analysis** - Track improvements across versions
+- **Multiple Formats** - Text, JSON, and HTML reports
+
+**Quick Performance Check:**
+```bash
+make benchmark                    # Run all benchmarks
+make profile FILE=script.syn      # Profile a script
+make profile-html FILE=script.syn # Generate HTML report
+```
+
+**v0.3 Baseline (Interpreter):** ~290K-510K instructions/second  
+**v0.4 Target (Bytecode VM):** 1.5-5M instructions/second (5-10x faster)
+
+See [PERFORMANCE_PROFILING.md](PERFORMANCE_PROFILING.md) for details.
 
 ---
 
@@ -137,9 +168,12 @@ This code prints a greeting and asks the AI to describe itself.
 |----------|--------|----------------|
 | 0.1 | Prototype | Base REPL, interpreter core |
 | 0.2 | Stable | Arithmetic, logic, closures |
-| 0.3 | Current | Type system, package manager, JIT compiler |
-| 0.4 | Planned | Networking, web REPL, AI IDE |
-| 0.5+ | Future | On-chain deterministic execution, neural plugin system |
+| 0.3 | ✅ Complete | Type system, full interpreter (296 tests) |
+| 0.4 | 🚧 In Progress | Enhanced bytecode compiler, VM v2, performance profiler |
+| 0.5 | Planned | Package manager, web REPL, AI IDE |
+| 0.6+ | Future | On-chain execution, neural plugin system |
+
+**Current Focus:** Performance optimization, bytecode compilation, profiling tools
 
 ---
 
@@ -149,12 +183,21 @@ This code prints a greeting and asks the AI to describe itself.
 
 - **[GETTING_STARTED.md](GETTING_STARTED.md)** - 🎯 **START HERE** - Most logical order for learning, using, and extending Syntari
 - **[DEVELOPMENT_SUMMARY.md](DEVELOPMENT_SUMMARY.md)** - 📋 Executive summary and project overview
+- **[V04_DEVELOPMENT_PLAN.md](V04_DEVELOPMENT_PLAN.md)** - 📈 v0.4 development plan (8.5 weeks)
 - **[ROADMAP_VISUAL.md](ROADMAP_VISUAL.md)** - 🗺️ Visual roadmap with timelines and dependencies
 - **[ACTION_ITEMS.md](ACTION_ITEMS.md)** - ✅ Prioritized 2-week task breakdown
 - **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** - 🔧 Code examples and implementation tutorials
 - **[NEXT_STEPS.md](NEXT_STEPS.md)** - 📚 Comprehensive strategic planning for v0.4+
+- **[PERFORMANCE_PROFILING.md](PERFORMANCE_PROFILING.md)** - ⚡ Performance profiling and benchmarking
 
-**Current Status:** 🎉 **v0.3 Complete!** Full interpreter pipeline functional with 189 passing tests. CLI, REPL, and examples ready. See [GETTING_STARTED.md](GETTING_STARTED.md) for usage.
+**Current Status:** 🚀 **v0.4 Development Phase 1 Complete!**
+- ✅ Enhanced bytecode compiler v2 (900+ lines)
+- ✅ Enhanced VM runtime v2 (700+ lines)
+- ✅ Optimization framework (constant folding, dead code elimination)
+- ✅ Performance profiler with HTML reports
+- ✅ Benchmark suite (5 benchmarks)
+- ✅ 296 tests passing
+- 🚧 Next: Package manager foundation
 
 ---
 
