@@ -30,7 +30,7 @@ jobs:
         fetch-depth: 0
 
     - name: Check for secrets in code
-      uses: trufflesecurity/trufflehog@main
+      uses: trufflesecurity/trufflehog@v3.82.13
       with:
         path: ./
         base: ${{ github.event.repository.default_branch }}
@@ -41,12 +41,13 @@ jobs:
       run: |
         echo "Scanning for common secret patterns..."
         
-        # Check for common secret patterns
-        if grep -r -E "(api[_-]?key|secret[_-]?key|private[_-]?key|token|password)" --include="*.py" --include="*.yml" --include="*.yaml" .; then
-          echo "⚠️ Warning: Found potential secret references in code"
-          echo "Please verify these are not hardcoded secrets"
+        # Check for common secret patterns (excluding comments and variable declarations)
+        # This is a basic check - TruffleHog provides more thorough scanning
+        if grep -r -E "(api[_-]?key\s*=|secret[_-]?key\s*=|private[_-]?key\s*=|token\s*=|password\s*=)" --include="*.py" --include="*.yml" --include="*.yaml" . | grep -v "^[[:space:]]*#"; then
+          echo "⚠️ Warning: Found potential hardcoded secrets in code"
+          echo "Please verify these are not actual secrets"
         else
-          echo "✅ No obvious secret patterns found"
+          echo "✅ No obvious hardcoded secrets found"
         fi
       continue-on-error: true
 
@@ -119,8 +120,8 @@ jobs:
         # List all installed packages and their sources
         pip list --format=json > installed-packages.json
         
-        # Check for typosquatting (basic check)
-        if pip list | grep -iE "(requets|urlib|numppy|pandsa)"; then
+        # Check for typosquatting (common misspellings of popular packages)
+        if pip list | grep -iE "(reqests|requets|urlib|urllib3s|numppy|pandsa|djanga)"; then
           echo "❌ Potential typosquatting detected!"
           exit 1
         fi

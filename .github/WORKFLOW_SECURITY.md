@@ -17,7 +17,7 @@ This prevents supply chain attacks where action repositories could be compromise
 | github/codeql-action/init@v4 | v4.0.0 | 83a02f7883b12e0e4e1a146174f5e2e48a5d4b4d |
 | github/codeql-action/analyze@v4 | v4.0.0 | 83a02f7883b12e0e4e1a146174f5e2e48a5d4b4d |
 | actions/github-script@v7 | v7.0.1 | 7804639f0b32c0c674c6d0b5b7c5e9b3c7b7d3e2 |
-| trufflesecurity/trufflehog@main | Latest | (use specific release tag) |
+| trufflesecurity/trufflehog | v3.82.13 | Use specific release tag, not @main |
 
 ### How to Pin Actions
 

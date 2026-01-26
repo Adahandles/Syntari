@@ -43,11 +43,10 @@ jobs:
 
     - name: Generate CycloneDX SBOM
       run: |
-        cyclonedx-py requirements \
-          -r \
-          -o sbom-cyclonedx.json \
+        # Generate SBOM from installed packages
+        cyclonedx-py environment \
           --format json \
-          pyproject.toml
+          --output sbom-cyclonedx.json
       continue-on-error: true
 
     - name: Generate SPDX SBOM  
@@ -72,7 +71,8 @@ jobs:
 
     - name: Create SBOM summary
       run: |
-        cat > sbom-summary.md << 'EOF'
+        PACKAGE_COUNT=$(pip list --format=freeze | wc -l)
+        cat > sbom-summary.md << EOF
         # Software Bill of Materials (SBOM) Summary
         
         **Generated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
@@ -82,7 +82,7 @@ jobs:
         ## Components
         
         ### Python Dependencies
-        $(pip list --format=freeze | wc -l) packages installed
+        ${PACKAGE_COUNT} packages installed
         
         ### Direct Dependencies
         - pytest
@@ -96,14 +96,14 @@ jobs:
         
         ## Security Status
         
-        Vulnerability scan results available in `pip-audit-report.json`
+        Vulnerability scan results available in \`pip-audit-report.json\`
         
         ## SBOM Formats
         
-        - CycloneDX JSON: `sbom-cyclonedx.json`
-        - Pip packages list: `pip-packages.json`
-        - Dependency tree: `dependency-tree.json`
-        - Vulnerability report: `sbom-vulnerabilities.json`
+        - CycloneDX JSON: \`sbom-cyclonedx.json\`
+        - Pip packages list: \`pip-packages.json\`
+        - Dependency tree: \`dependency-tree.json\`
+        - Vulnerability report: \`sbom-vulnerabilities.json\`
         
         ## Compliance
         
