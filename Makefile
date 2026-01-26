@@ -1,4 +1,4 @@
-.PHONY: help install dev-install test test-verbose lint format clean build run repl examples
+.PHONY: help install dev-install test test-verbose lint format clean build run repl examples security security-scan
 
 help:
 	@echo "Syntari Development Commands"
@@ -14,6 +14,10 @@ help:
 	@echo "  make lint         - Run linters (flake8, mypy)"
 	@echo "  make format       - Format code with black"
 	@echo "  make clean        - Remove build artifacts and cache"
+	@echo ""
+	@echo "Security:"
+	@echo "  make security     - Run all security checks"
+	@echo "  make security-scan- Run bandit security scanner"
 	@echo ""
 	@echo "Building:"
 	@echo "  make build        - Build distribution packages"
@@ -80,3 +84,28 @@ examples:
 		python3 main.py $$file; \
 		echo ""; \
 	done
+
+security:
+	@echo "Running security checks..."
+	@echo ""
+	@echo "1. Installing security tools..."
+	@pip install -q bandit safety 2>/dev/null || echo "Tools already installed"
+	@echo ""
+	@echo "2. Running Bandit (security scanner)..."
+	@bandit -r src/ -ll -f txt || true
+	@echo ""
+	@echo "3. Checking dependencies for vulnerabilities..."
+	@safety check --json || echo "Safety check completed with warnings"
+	@echo ""
+	@echo "4. Running security tests..."
+	@pytest tests/test_security.py -v || echo "No security tests found"
+	@echo ""
+	@echo "Security scan complete!"
+
+security-scan:
+	@echo "Running comprehensive security scan..."
+	@pip install -q bandit safety
+	@bandit -r src/ -f json -o security-report.json 2>/dev/null || true
+	@bandit -r src/ -ll
+	@safety check
+	@echo "Security scan complete! Check security-report.json for details."

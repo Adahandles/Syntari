@@ -42,6 +42,29 @@ make test
 
 👨‍💻 **[Read Contributing Guide](CONTRIBUTING.md)** - Set up your development environment
 
+🔒 **[Read Security Guide](SECURITY_GUIDE.md)** - Security best practices and tools
+
+---
+
+## 🔒 Security
+
+Syntari takes security seriously. Our repository includes:
+
+- ✅ Automated security scanning (Bandit, Safety, pip-audit)
+- ✅ Pre-commit hooks for secret detection
+- ✅ Weekly security audits via GitHub Actions
+- ✅ SSRF protection in networking module
+- ✅ Comprehensive security documentation
+
+**Quick Security Check:**
+```bash
+make security          # Run security checks
+./cleanup.sh          # Clean repository
+pre-commit install    # Set up hooks
+```
+
+See [SECURITY_GUIDE.md](SECURITY_GUIDE.md) for details.
+
 ---
 
 ## Overview
