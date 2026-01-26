@@ -1,4 +1,4 @@
-.PHONY: help install dev-install test test-verbose lint format clean build run repl examples security security-scan
+.PHONY: help install dev-install test test-verbose lint format clean build run repl examples security security-scan benchmark profile
 
 help:
 	@echo "Syntari Development Commands"
@@ -14,6 +14,10 @@ help:
 	@echo "  make lint         - Run linters (flake8, mypy)"
 	@echo "  make format       - Format code with black"
 	@echo "  make clean        - Remove build artifacts and cache"
+	@echo ""
+	@echo "Performance:"
+	@echo "  make benchmark    - Run performance benchmarks"
+	@echo "  make profile FILE=<file> - Profile a Syntari script"
 	@echo ""
 	@echo "Security:"
 	@echo "  make security     - Run all security checks"
@@ -109,3 +113,24 @@ security-scan:
 	@bandit -r src/ -ll
 	@safety check
 	@echo "Security scan complete! Check security-report.json for details."
+
+benchmark:
+	@echo "Running Syntari benchmarks..."
+	@cd benchmarks && python3 run_benchmarks.py
+
+profile:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make profile FILE=path/to/script.syn"; \
+		exit 1; \
+	fi
+	@echo "Profiling $(FILE)..."
+	@python3 main.py --profile $(FILE)
+
+profile-html:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make profile-html FILE=path/to/script.syn"; \
+		exit 1; \
+	fi
+	@echo "Profiling $(FILE) with HTML output..."
+	@python3 main.py --profile $(FILE) --profile-format html --profile-output profile.html
+	@echo "Report saved to profile.html"
