@@ -27,6 +27,22 @@ help:
 	@echo "  make security     - Run all security checks"
 	@echo "  make security-scan- Run bandit security scanner"
 	@echo ""
+	@echo "Docker:"
+	@echo "  make docker-build - Build Docker image"
+	@echo "  make docker-run   - Run REPL in Docker"
+	@echo "  make docker-compose-up - Start all services"
+	@echo "  make docker-compose-down - Stop all services"
+	@echo ""
+	@echo "Version Management:"
+	@echo "  make version      - Show current version"
+	@echo "  make bump-patch   - Bump patch version (0.4.0 -> 0.4.1)"
+	@echo "  make bump-minor   - Bump minor version (0.4.0 -> 0.5.0)"
+	@echo "  make bump-major   - Bump major version (0.4.0 -> 1.0.0)"
+	@echo ""
+	@echo "Release:"
+	@echo "  make prepare-release - Run all checks for release"
+	@echo "  make ci-local     - Run CI checks locally"
+	@echo ""
 	@echo "Building:"
 	@echo "  make build        - Build distribution packages"
 	@echo ""
@@ -34,6 +50,12 @@ help:
 	@echo "  make run          - Run hello_world.syn example"
 	@echo "  make repl         - Start Syntari REPL"
 	@echo "  make examples     - Run all example programs"
+	@echo ""
+	@echo "Docker:"
+	@echo "  make docker-build - Build Docker image"
+	@echo "  make docker-run   - Run Syntari in Docker"
+	@echo "  make docker-compose-up - Start all services"
+	@echo "  make docker-compose-down - Stop all services"
 
 install:
 	pip install -e ".[web]"
@@ -151,3 +173,85 @@ profile-html:
 	@echo "Profiling $(FILE) with HTML output..."
 	@python3 main.py --profile $(FILE) --profile-format html --profile-output profile.html
 	@echo "Report saved to profile.html"
+
+# Docker commands
+docker-build:
+	@echo "Building Syntari Docker image..."
+	docker build -t syntari:latest -t syntari:0.4.0 .
+
+docker-run:
+	@echo "Running Syntari in Docker (REPL)..."
+	docker run -it --rm syntari:latest
+
+docker-run-file:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make docker-run-file FILE=path/to/script.syn"; \
+		exit 1; \
+	fi
+	@echo "Running $(FILE) in Docker..."
+	docker run --rm -v $(PWD):/scripts syntari:latest /scripts/$(FILE)
+
+docker-compose-up:
+	@echo "Starting Syntari services with Docker Compose..."
+	docker-compose up -d
+
+docker-compose-down:
+	@echo "Stopping Syntari services..."
+	docker-compose down
+
+docker-compose-logs:
+	docker-compose logs -f
+
+docker-clean:
+	@echo "Cleaning Docker images and containers..."
+	docker-compose down -v
+	docker rmi syntari:latest syntari:0.4.0 2>/dev/null || true
+
+# Version management
+version:
+	@echo "Syntari version 0.4.0"
+	@python3 main.py --version
+
+bump-patch:
+	@echo "Bumping patch version..."
+	@# Requires bump2version: pip install bump2version
+	bump2version patch
+
+bump-minor:
+	@echo "Bumping minor version..."
+	bump2version minor
+
+bump-major:
+	@echo "Bumping major version..."
+	bump2version major
+
+# Release preparation
+prepare-release:
+	@echo "Preparing release..."
+	@echo "1. Running tests..."
+	@make test
+	@echo "2. Running security checks..."
+	@make security
+	@echo "3. Checking formatting..."
+	@make format-check
+	@echo "4. Building Docker image..."
+	@make docker-build
+	@echo "5. Generating coverage report..."
+	@make test-coverage
+	@echo ""
+	@echo "✅ Release preparation complete!"
+	@echo "   Next steps:"
+	@echo "   1. Review CHANGELOG.md"
+	@echo "   2. Update version in pyproject.toml"
+	@echo "   3. Commit changes"
+	@echo "   4. Create git tag: git tag v0.4.0"
+	@echo "   5. Push: git push origin main --tags"
+
+# CI/CD
+ci-local:
+	@echo "Running CI checks locally..."
+	@make clean
+	@make test-verbose
+	@make lint
+	@make security
+	@echo "✅ All CI checks passed!"
