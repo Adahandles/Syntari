@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-01-26 16:26:33",
+  "total_benchmarks": 5,
+  "successful": 0,
+  "failed": 5,
+  "total_time": 0,
+  "total_instructions": 0,
+  "results": [
+    {
+      "name": "array_ops",
+      "execution_time": 0.0,
+      "instructions": 0,
+      "max_stack_depth": 0,
+      "instructions_per_second": 0.0,
+      "success": false,
+      "error": "'Interpreter' object has no attribute 'locals'"
+    },
+    {
+      "name": "factorial",
+      "execution_time": 0.0,
+      "instructions": 0,
+      "max_stack_depth": 0,
+      "instructions_per_second": 0.0,
+      "success": false,
+      "error": "'Interpreter' object has no attribute 'locals'"
+    },
+    {
+      "name": "fibonacci",
+      "execution_time": 0.0,
+      "instructions": 0,
+      "max_stack_depth": 0,
+      "instructions_per_second": 0.0,
+      "success": false,
+      "error": "'Interpreter' object has no attribute 'locals'"
+    },
+    {
+      "name": "nested_loops",
+      "execution_time": 0.0,
+      "instructions": 0,
+      "max_stack_depth": 0,
+      "instructions_per_second": 0.0,
+      "success": false,
+      "error": "'Interpreter' object has no attribute 'locals'"
+    },
+    {
+      "name": "prime_check",
+      "execution_time": 0.0,
+      "instructions": 0,
+      "max_stack_depth": 0,
+      "instructions_per_second": 0.0,
+      "success": false,
+      "error": "'Interpreter' object has no attribute 'locals'"
+    }
+  ]
+}

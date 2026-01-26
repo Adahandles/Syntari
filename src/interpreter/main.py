@@ -350,6 +350,7 @@ Examples:
   syntari --repl                  # Start interactive REPL
   syntari --compile script.syn    # Compile to bytecode
   syntari --run script.sbc        # Run bytecode
+  syntari --profile script.syn    # Run with performance profiling
   syntari --verbose script.syn    # Run with verbose output
         """,
     )
@@ -365,6 +366,17 @@ Examples:
     )
 
     parser.add_argument("--run", action="store_true", help="Run bytecode file (.sbc)")
+
+    parser.add_argument("--profile", action="store_true", help="Run with performance profiling")
+
+    parser.add_argument(
+        "--profile-format",
+        choices=["text", "json", "html"],
+        default="text",
+        help="Profiler output format (default: text)",
+    )
+
+    parser.add_argument("--profile-output", help="Save profiler report to file")
 
     parser.add_argument("-o", "--output", help="Output file path for compilation")
 
@@ -382,6 +394,21 @@ Examples:
     if not args.file:
         parser.print_help()
         return 1
+
+    # Profile mode
+    if args.profile:
+        try:
+            from src.tools.profiler import profile_interpreter
+
+            profile_interpreter(args.file, args.profile_format, args.profile_output)
+            return 0
+        except Exception as e:
+            print(f"Profiling error: {e}", file=sys.stderr)
+            if args.verbose:
+                import traceback
+
+                traceback.print_exc()
+            return 1
 
     # Compile mode
     if args.compile:

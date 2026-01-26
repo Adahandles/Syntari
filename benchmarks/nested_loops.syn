@@ -1,0 +1,21 @@
+// Benchmark: Nested loops
+fn nested_computation(n) {
+    let sum = 0
+    let i = 0
+    while (i < n) {
+        let j = 0
+        while (j < n) {
+            let k = 0
+            while (k < 10) {
+                sum = sum + (i + j + k)
+                k = k + 1
+            }
+            j = j + 1
+        }
+        i = i + 1
+    }
+    return sum
+}
+
+let result = nested_computation(50)
+print("Nested computation result:", result)
