@@ -15,11 +15,11 @@ from .bytecode_v2 import (
 )
 
 __all__ = [
-    'BytecodeCompilerV2',
-    'Opcode',
-    'compile_file',
-    'CompileError',
-    'OptimizationPass',
-    'ConstantFoldingPass',
-    'DeadCodeEliminationPass',
+    "BytecodeCompilerV2",
+    "Opcode",
+    "compile_file",
+    "CompileError",
+    "OptimizationPass",
+    "ConstantFoldingPass",
+    "DeadCodeEliminationPass",
 ]
