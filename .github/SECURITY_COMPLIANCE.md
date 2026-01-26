@@ -38,7 +38,7 @@ Syntari adheres to the following security standards and frameworks:
 ### SLSA Framework (Supply Chain Levels for Software Artifacts)
 - ✅ **SLSA Level 1**: Source code version controlled (Git)
 - ✅ **SLSA Level 2**: Build service (GitHub Actions), provenance generation
-- ✅ **SLSA Level 3**: Hardened builds, non-falsifiable provenance
+- ✅ **SLSA Level 3**: Hardened builds, non-falsifiable provenance, SHA-pinned actions, SBOM signing with cosign
 - 🚧 **SLSA Level 4**: Two-party review (in progress via branch protection)
 
 ### CIS Controls

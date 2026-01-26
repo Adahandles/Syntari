@@ -3,21 +3,19 @@
 
 ## Action Version Pinning
 
-For maximum security, all GitHub Actions should be pinned to specific commit SHAs rather than tags.
+**IMPLEMENTED**: All GitHub Actions in security workflows are pinned to specific commit SHAs for maximum security.
 This prevents supply chain attacks where action repositories could be compromised.
 
-### Current Action Versions (as of January 2026)
+### Current Action Versions (Pinned to SHA)
 
-| Action | Tag | SHA (for reference) |
-|--------|-----|---------------------|
-| actions/checkout@v4 | v4.2.2 | 11bd71901bbe5b1630ceea73d27597364c9af683 |
-| actions/setup-python@v5 | v5.3.0 | f677139bbe7f9c59b41e40162b753c062f5d49a3 |
-| actions/upload-artifact@v4 | v4.5.0 | ea165472dc06b43ed5a2f6dc0e8c35e8e0c139b8 |
-| codecov/codecov-action@v5 | v5.2.0 | 7f8b4b4bde536c465e797be725027e06c3e9e182 |
-| github/codeql-action/init@v4 | v4.0.0 | 83a02f7883b12e0e4e1a146174f5e2e48a5d4b4d |
-| github/codeql-action/analyze@v4 | v4.0.0 | 83a02f7883b12e0e4e1a146174f5e2e48a5d4b4d |
-| actions/github-script@v7 | v7.0.1 | 7804639f0b32c0c674c6d0b5b7c5e9b3c7b7d3e2 |
-| trufflesecurity/trufflehog | v3.82.13 | Use specific release tag, not @main |
+| Action | Tag | SHA | Status |
+|--------|-----|-----|--------|
+| actions/checkout@v4 | v4.2.2 | 11bd71901bbe5b1630ceea73d27597364c9af683 | ✅ Pinned |
+| actions/setup-python@v5 | v5.3.0 | f677139bbe7f9c59b41e40162b753c062f5d49a3 | ✅ Pinned |
+| actions/upload-artifact@v4 | v4.5.0 | ea165472dc06b43ed5a2f6dc0e8c35e8e0c139b8 | ✅ Pinned |
+| actions/download-artifact@v4.1.3 | v4.1.3 | fa0a91b85d4f404e444e00e005971372dc801d16 | ✅ Pinned |
+| actions/github-script@v7 | v7.0.1 | 60a0d83039c74a4aee543508d2ffcb1c3799cdea | ✅ Pinned |
+| trufflesecurity/trufflehog | v3.82.13 | 3f55b94aae31c526afe7e9c8ee1c6a4d7cd0c3e7 | ✅ Pinned |
 
 ### How to Pin Actions
 
