@@ -48,6 +48,7 @@ This directory contains GitHub Actions workflows that enforce security and quali
 #### `security-policy-enforcement.yml` - Security Policy Checks
 **Triggers**: PR, Push, Daily schedule, Manual  
 **Purpose**: Enforce security policies and standards
+**SHA Pinned**: ✅ All actions pinned to commit SHAs
 
 **Jobs**:
 - `sensitive-data-check` - Scan for secrets, API keys, sensitive files
@@ -65,6 +66,8 @@ This directory contains GitHub Actions workflows that enforce security and quali
 #### `sbom.yml` - Software Bill of Materials
 **Triggers**: Push, PR, Release, Weekly schedule, Manual  
 **Purpose**: Generate transparent dependency inventory
+**SHA Pinned**: ✅ All actions pinned to commit SHAs
+**SLSA Level 3**: ✅ Cryptographic signing with cosign
 
 **Jobs**:
 - `generate-sbom` - Create SBOM in multiple formats (CycloneDX, SPDX)
@@ -72,6 +75,7 @@ This directory contains GitHub Actions workflows that enforce security and quali
 
 **Outputs**:
 - CycloneDX JSON SBOM
+- Cryptographic signature bundle (cosign)
 - Dependency tree
 - Vulnerability report
 - License inventory
@@ -80,6 +84,23 @@ This directory contains GitHub Actions workflows that enforce security and quali
 - Attaches SBOM to GitHub Releases
 - Comments on PRs with SBOM summary
 - NTIA minimum elements compliance
+- Verifiable cryptographic attestation
+
+#### `dependabot-auto-merge.yml` - Automated Dependency Updates
+**Triggers**: Pull Requests from Dependabot  
+**Purpose**: Auto-approve and merge safe dependency updates
+**SHA Pinned**: ✅ All actions pinned to commit SHAs
+
+**Jobs**:
+- `auto-approve` - Auto-approve patch/minor updates
+- `auto-merge` - Enable auto-merge after status checks pass
+
+**Features**:
+- Auto-approves patch and minor version updates
+- Requires manual review for major updates
+- Waits for all status checks to pass
+- Comments on PRs with merge status
+- Faster security patch deployment
 
 ### Other Workflows
 
