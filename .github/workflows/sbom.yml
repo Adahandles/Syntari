@@ -122,13 +122,10 @@ jobs:
       shell: bash
 
     - name: Install cosign for SBOM signing
-      run: |
-        # Install cosign for cryptographic signing
-        curl -sL https://github.com/sigstore/cosign/releases/download/v2.2.3/cosign-linux-amd64 -o /usr/local/bin/cosign
-        chmod +x /usr/local/bin/cosign
-        cosign version
+      uses: sigstore/cosign-installer@6e04a4df06c4b234e932caaeba82803a6e5c574c # v3.5.0
+      with:
+        cosign-release: 'v2.4.0'
       continue-on-error: true
-
     - name: Sign SBOM with cosign (keyless)
       run: |
         # Sign SBOM using keyless signing (OIDC)
