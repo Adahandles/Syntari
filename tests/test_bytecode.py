@@ -567,7 +567,7 @@ while (x < 3) {
 
         try:
             # Compile it
-            output_file = compile_file(source_file)
+            output_file = compile_file(source_file, verbose=False)
 
             # Verify .sbc file was created
             assert os.path.exists(output_file)
