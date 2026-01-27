@@ -333,7 +333,7 @@ async def stats_handler(request):
     auth_token = request.headers.get("Authorization")
     expected_token = os.environ.get("ADMIN_AUTH_TOKEN", "")
     if not expected_token:
-        return web.json_response({"error": "Authentication not configured"}, status=503)
+        return web.json_response({"error": "Authentication not configured"}, status=500)
     if not auth_token or auth_token != f"Bearer {expected_token}":
         return web.json_response({"error": "Unauthorized"}, status=401)
     
