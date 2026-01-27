@@ -1,0 +1,51 @@
+# Copilot Setup Steps for Syntari
+# These steps are executed by GitHub Copilot coding agent to set up the development environment
+
+name: Setup Syntari Development Environment
+
+steps:
+  - name: Install Python dependencies
+    run: |
+      python3 -m pip install --upgrade pip
+      pip install -e .
+    description: Install Syntari in development mode with all dependencies
+
+  - name: Install development tools
+    run: |
+      pip install pytest pytest-cov pytest-asyncio black flake8 mypy
+    description: Install code quality and testing tools
+
+  - name: Verify installation
+    run: |
+      python3 -c "import src.interpreter.lexer; print('Lexer import successful')"
+      python3 -c "import src.interpreter.parser; print('Parser import successful')"
+    description: Verify that core modules can be imported
+
+  - name: Run test suite
+    run: |
+      pytest tests/ -v --tb=short
+    description: Run tests to verify environment is working correctly
+    continue-on-error: true
+
+  - name: Setup environment variables
+    run: |
+      export PYTHONPATH="${PYTHONPATH}:${PWD}"
+    description: Set PYTHONPATH to include repository root
+
+environment:
+  PYTHON_VERSION: "3.8"
+  TEST_FRAMEWORK: "pytest"
+  FORMATTER: "black"
+  LINTER: "flake8"
+  TYPE_CHECKER: "mypy"
+
+notes: |
+  This setup configuration helps GitHub Copilot coding agent understand:
+  - How to install dependencies (pip install -e .)
+  - How to run tests (pytest tests/)
+  - How to format code (black)
+  - How to lint code (flake8)
+  - How to type check (mypy)
+  
+  The agent will automatically execute these steps in its isolated environment
+  to ensure it can properly build, test, and validate changes to the Syntari codebase.
