@@ -10,10 +10,10 @@ from .cache import PackageCache
 from .registry import PackageRegistry
 
 __all__ = [
-    'PackageManifest',
-    'Dependency',
-    'DependencyResolver',
-    'ResolverError',
-    'PackageCache',
-    'PackageRegistry',
+    "PackageManifest",
+    "Dependency",
+    "DependencyResolver",
+    "ResolverError",
+    "PackageCache",
+    "PackageRegistry",
 ]
