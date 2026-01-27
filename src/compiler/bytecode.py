@@ -384,7 +384,7 @@ class BytecodeGenerator:
             else:
                 # Fallback for unknown types
                 bs = f"S{str(c)}".encode("utf-8")
-            
+
             data.extend(struct.pack("<I", len(bs)))
             data.extend(bs)
 
