@@ -138,21 +138,67 @@ class SyntariVM:
             s = data[off : off + slen].decode("utf-8")
             off += slen
 
-            # Try to parse as number or boolean
-            if s == "True":
-                val = True
-            elif s == "False":
-                val = False
-            elif s == "None":
+            # Parse constant based on type tag
+            # New format uses explicit type tags:
+            #   S<text>  -> string constant
+            #   I<digits> -> integer constant
+            #   F<text>  -> float constant
+            #   B0/B1    -> boolean constant
+            #   N        -> None constant (no payload)
+            #
+            # For backwards compatibility, if the first character is not a
+            # recognized tag, we fall back to legacy heuristic parsing.
+            if not s:
+                raise ValueError("Invalid bytecode: empty constant payload")
+
+            tag = s[0]
+            payload = s[1:]
+
+            if tag == "S":
+                # Explicit string constant
+                val = payload
+            elif tag == "I":
+                # Explicit integer constant
+                try:
+                    val = int(payload)
+                except ValueError as exc:
+                    raise ValueError(f"Invalid integer constant payload: {payload!r}") from exc
+            elif tag == "F":
+                # Explicit float constant
+                try:
+                    val = float(payload)
+                except ValueError as exc:
+                    raise ValueError(f"Invalid float constant payload: {payload!r}") from exc
+            elif tag == "B":
+                # Explicit boolean constant
+                if payload == "1":
+                    val = True
+                elif payload == "0":
+                    val = False
+                else:
+                    raise ValueError(f"Invalid boolean constant payload: {payload!r}")
+            elif tag == "N":
+                # Explicit None constant (no payload expected)
+                if payload:
+                    raise ValueError(f"Invalid None constant payload: {payload!r}")
                 val = None
             else:
-                try:
-                    if "." in s:
-                        val = float(s)
-                    else:
-                        val = int(s)
-                except Exception:
-                    val = s
+                # Legacy format: interpret the entire string using heuristic parsing.
+                # This maintains backward compatibility with old bytecode files.
+                if s == "True":
+                    val = True
+                elif s == "False":
+                    val = False
+                elif s == "None":
+                    val = None
+                else:
+                    try:
+                        if "." in s:
+                            val = float(s)
+                        else:
+                            val = int(s)
+                    except Exception:
+                        val = s
 
             consts.append(val)
 
@@ -232,6 +278,8 @@ class SyntariVM:
             # LOAD_CONST idx
             if op == 0x01:
                 idx = self._fetch_u32()
+                if idx >= len(self.consts):
+                    raise RuntimeError(f"Invalid constant index: {idx}")
                 self._push(self.consts[idx])
 
             # STORE name
@@ -335,18 +383,24 @@ class SyntariVM:
             # Control flow
             elif op == 0x20:  # JMP
                 addr = self._fetch_u32()
+                if addr >= len(self.code):
+                    raise RuntimeError(f"Invalid jump address: {addr}")
                 self.ip = addr
 
             elif op == 0x21:  # JMP_IF_FALSE
                 addr = self._fetch_u32()
                 condition = self._pop()
                 if not self._is_truthy(condition):
+                    if addr >= len(self.code):
+                        raise RuntimeError(f"Invalid jump address: {addr}")
                     self.ip = addr
 
             elif op == 0x22:  # JMP_IF_TRUE
                 addr = self._fetch_u32()
                 condition = self._pop()
                 if self._is_truthy(condition):
+                    if addr >= len(self.code):
+                        raise RuntimeError(f"Invalid jump address: {addr}")
                     self.ip = addr
 
             # Function calls

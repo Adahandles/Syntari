@@ -64,6 +64,7 @@ class BytecodeGenerator:
         self.instructions = []
         self.constants = []
         self.label_counter = 0
+        self.finalized = False
 
     def add_const(self, value):
         """Add a constant to the pool and return its index"""
@@ -302,7 +303,9 @@ class BytecodeGenerator:
 
     def finalize(self):
         """Finalize bytecode generation"""
-        self.emit("HALT")
+        if not self.finalized:
+            self.emit("HALT")
+            self.finalized = True
 
     def resolve_labels(self):
         """Resolve label references to byte addresses in code"""
@@ -362,7 +365,26 @@ class BytecodeGenerator:
         # Write constants pool
         data.extend(struct.pack("<I", len(self.constants)))
         for c in self.constants:
-            bs = str(c).encode("utf-8")
+            # Use type tags to distinguish types unambiguously
+            if c is None:
+                # None: tag 'N' with no payload
+                bs = b"N"
+            elif isinstance(c, bool):
+                # Boolean: tag 'B' with '0' or '1'
+                bs = f"B{'1' if c else '0'}".encode("utf-8")
+            elif isinstance(c, int):
+                # Integer: tag 'I' with string representation
+                bs = f"I{c}".encode("utf-8")
+            elif isinstance(c, float):
+                # Float: tag 'F' with string representation
+                bs = f"F{c}".encode("utf-8")
+            elif isinstance(c, str):
+                # String: tag 'S' with the string content
+                bs = f"S{c}".encode("utf-8")
+            else:
+                # Fallback for unknown types
+                bs = f"S{str(c)}".encode("utf-8")
+            
             data.extend(struct.pack("<I", len(bs)))
             data.extend(bs)
 

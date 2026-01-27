@@ -13,12 +13,15 @@ warnings.warn(
     stacklevel=2,
 )
 
-import src.vm.runtime as _runtime
+from src.vm import runtime as _runtime
 
 # Re-export public names from src.vm.runtime for backward compatibility
-for _name in dir(_runtime):
-    if not _name.startswith("_"):
-        globals()[_name] = getattr(_runtime, _name)
+if hasattr(_runtime, "__all__"):
+    globals().update({name: getattr(_runtime, name) for name in _runtime.__all__})
+else:
+    for _name in dir(_runtime):
+        if not _name.startswith("_"):
+            globals()[_name] = getattr(_runtime, _name)
 
 if __name__ == "__main__":
     import sys

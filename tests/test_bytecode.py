@@ -210,7 +210,7 @@ class TestVM:
 
         captured = io.StringIO()
         sys.stdout = captured
-        vm.run()
+        vm.run(verbose=False)
         sys.stdout = sys.__stdout__
 
         output = captured.getvalue()
@@ -246,7 +246,7 @@ class TestVM:
 
         captured = io.StringIO()
         sys.stdout = captured
-        vm.run()
+        vm.run(verbose=False)
         sys.stdout = sys.__stdout__
 
         output = captured.getvalue()
@@ -274,7 +274,7 @@ class TestVM:
 
         captured = io.StringIO()
         sys.stdout = captured
-        vm.run()
+        vm.run(verbose=False)
         sys.stdout = sys.__stdout__
 
         output = captured.getvalue()
@@ -310,7 +310,7 @@ class TestVM:
 
         captured = io.StringIO()
         sys.stdout = captured
-        vm.run()
+        vm.run(verbose=False)
         sys.stdout = sys.__stdout__
 
         output = captured.getvalue()
@@ -351,7 +351,7 @@ class TestVM:
 
         captured = io.StringIO()
         sys.stdout = captured
-        vm.run()
+        vm.run(verbose=False)
         sys.stdout = sys.__stdout__
 
         output = captured.getvalue()
@@ -373,7 +373,7 @@ class TestVM:
         vm.ninstr = 11001
 
         with pytest.raises(VMSecurityError, match="Stack overflow"):
-            vm.run()
+            vm.run(verbose=False)
 
     def test_security_variable_limit(self):
         """Test that variable limit is enforced"""
@@ -393,7 +393,7 @@ class TestVM:
         vm.ninstr = 20002
 
         with pytest.raises(VMSecurityError, match="Variable limit"):
-            vm.run()
+            vm.run(verbose=False)
 
 
 class TestEndToEnd:
@@ -428,7 +428,7 @@ class TestEndToEnd:
 
             captured = io.StringIO()
             sys.stdout = captured
-            vm.run()
+            vm.run(verbose=False)
             sys.stdout = sys.__stdout__
 
             output = captured.getvalue()
@@ -466,7 +466,7 @@ print(x + y)
 
             captured = io.StringIO()
             sys.stdout = captured
-            vm.run()
+            vm.run(verbose=False)
             sys.stdout = sys.__stdout__
 
             output = captured.getvalue()
@@ -505,7 +505,7 @@ if (x == 5) {
 
             captured = io.StringIO()
             sys.stdout = captured
-            vm.run()
+            vm.run(verbose=False)
             sys.stdout = sys.__stdout__
 
             output = captured.getvalue()
@@ -545,7 +545,7 @@ while (x < 3) {
 
             captured = io.StringIO()
             sys.stdout = captured
-            vm.run()
+            vm.run(verbose=False)
             sys.stdout = sys.__stdout__
 
             output = captured.getvalue()
@@ -582,7 +582,7 @@ while (x < 3) {
 
             captured = io.StringIO()
             sys.stdout = captured
-            vm.run()
+            vm.run(verbose=False)
             sys.stdout = sys.__stdout__
 
             output = captured.getvalue()
