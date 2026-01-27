@@ -25,11 +25,10 @@ globals().update({name: getattr(_bytecode, name) for name in __all__})
 
 if __name__ == "__main__":
     import sys
-    from src.compiler.bytecode import compile_file
 
     if len(sys.argv) < 2:
         print("Usage: python bytecode.py <source.syn> [output.sbc]")
         sys.exit(1)
     src = sys.argv[1]
     out = sys.argv[2] if len(sys.argv) > 2 else None
-    compile_file(src, out)
+    _bytecode.compile_file(src, out)
