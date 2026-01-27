@@ -514,9 +514,3 @@ def test_main_no_command():
         with patch("argparse.ArgumentParser.print_help"):
             result = main()
             assert result == 1
-
-
-def test_main_unknown_command():
-    """Test main with unknown command"""
-    # Remove this test as argparse handles unknown commands before we do
-    pass
