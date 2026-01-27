@@ -295,6 +295,13 @@ class BytecodeGenerator:
             for arg in node.args:
                 self.compile_expr(arg)
 
+            # For v0.3, we only support simple function calls where the callee is a name string.
+            if not isinstance(node.callee, str):
+                raise NotImplementedError(
+                    "Non-string callees (e.g., method calls like obj.method()) are not "
+                    "supported by the bytecode compiler in v0.3. "
+                    f"Got callee of type {type(node.callee).__name__}."
+                )
             # Emit call with function name and arg count
             self.emit("CALL", node.callee, len(node.args))
             return
