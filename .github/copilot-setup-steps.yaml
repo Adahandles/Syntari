@@ -7,8 +7,8 @@ steps:
   - name: Install Python dependencies
     run: |
       python3 -m pip install --upgrade pip
-      pip install -e .
-    description: Install Syntari in development mode with all dependencies
+      pip install -e ".[web]"
+    description: Install Syntari in development mode with all dependencies including web REPL
 
   - name: Install development tools
     run: |
@@ -41,11 +41,24 @@ environment:
 
 notes: |
   This setup configuration helps GitHub Copilot coding agent understand:
-  - How to install dependencies (pip install -e .)
+  - How to install dependencies (pip install -e ".[web]")
   - How to run tests (pytest tests/)
-  - How to format code (black)
-  - How to lint code (flake8)
-  - How to type check (mypy)
+  - How to format code (black src/ tests/)
+  - How to lint code (flake8 src/ tests/)
+  - How to type check (mypy src/ --ignore-missing-imports)
   
   The agent will automatically execute these steps in its isolated environment
   to ensure it can properly build, test, and validate changes to the Syntari codebase.
+  
+  Available Make commands:
+  - make test          # Run all tests
+  - make test-verbose  # Run tests with verbose output
+  - make lint          # Run linters (flake8, mypy)
+  - make format        # Format code with black
+  - make format-check  # Check if formatting is needed
+  - make clean         # Clean build artifacts
+  - make build         # Build distribution packages
+  - make repl          # Start interactive REPL
+  - make examples      # Run example programs
+  - make benchmark     # Run performance benchmarks
+  - make security      # Run security checks
