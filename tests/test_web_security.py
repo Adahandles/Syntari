@@ -14,13 +14,13 @@ from web.security import (
     validate_code_safety,
 )
 
-
 # Additional imports for new security features tests
 try:
     from web.app import (
         generate_csrf_token,
         validate_csrf_token,
     )
+
     HAS_APP_MODULE = True
 except ImportError:
     HAS_APP_MODULE = False
@@ -437,10 +437,10 @@ class TestCSRFProtection:
         """Test that CSRF tokens are generated securely"""
         token1 = generate_csrf_token()
         token2 = generate_csrf_token()
-        
+
         # Tokens should be unique
         assert token1 != token2
-        
+
         # Tokens should be URL-safe strings
         assert isinstance(token1, str)
         assert len(token1) > 32  # URL-safe base64 encoding increases length
@@ -449,14 +449,14 @@ class TestCSRFProtection:
     def test_validate_csrf_token_valid(self):
         """Test validation of valid CSRF token"""
         from web.app import csrf_tokens
-        
+
         ip_address = "192.168.1.1"
         token = "test_token_12345"
         csrf_tokens[ip_address] = token
-        
+
         result = validate_csrf_token(token, ip_address)
         assert result is True
-        
+
         # Clean up
         del csrf_tokens[ip_address]
 
@@ -464,13 +464,13 @@ class TestCSRFProtection:
     def test_validate_csrf_token_invalid(self):
         """Test validation of invalid CSRF token"""
         from web.app import csrf_tokens
-        
+
         ip_address = "192.168.1.2"
         csrf_tokens[ip_address] = "correct_token"
-        
+
         result = validate_csrf_token("wrong_token", ip_address)
         assert result is False
-        
+
         # Clean up
         del csrf_tokens[ip_address]
 
@@ -485,27 +485,27 @@ class TestCSRFProtection:
         """Test that CSRF tokens use constant-time comparison"""
         from web.app import csrf_tokens
         import time
-        
+
         ip_address = "192.168.1.3"
         correct_token = "a" * 40
         csrf_tokens[ip_address] = correct_token
-        
+
         # Time comparison with wrong first character
         wrong_token_1 = "b" + "a" * 39
         start = time.perf_counter()
         validate_csrf_token(wrong_token_1, ip_address)
         time_1 = time.perf_counter() - start
-        
+
         # Time comparison with wrong last character
         wrong_token_2 = "a" * 39 + "b"
         start = time.perf_counter()
         validate_csrf_token(wrong_token_2, ip_address)
         time_2 = time.perf_counter() - start
-        
+
         # Times should be similar (constant-time comparison)
         # Allow for some variance due to system load
         assert abs(time_1 - time_2) < 0.001  # Less than 1ms difference
-        
+
         # Clean up
         del csrf_tokens[ip_address]
 
@@ -517,7 +517,7 @@ class TestSecurityHeaders:
     def test_security_headers_middleware_exists(self):
         """Test that security headers middleware is defined"""
         from web.app import security_headers_middleware
-        
+
         assert security_headers_middleware is not None
         assert callable(security_headers_middleware)
 
@@ -525,9 +525,9 @@ class TestSecurityHeaders:
     def test_app_has_middleware(self):
         """Test that app is created with security middleware"""
         from web.app import create_app
-        
+
         app = create_app()
-        
+
         # Verify app has middleware
         assert len(app.middlewares) > 0
 
@@ -544,9 +544,9 @@ class TestMessageSizeLimits:
     def test_max_message_size(self):
         """Test WebSocket message size limit"""
         from web.app import MAX_MESSAGE_SIZE
-        
+
         # Should be 1MB
         assert MAX_MESSAGE_SIZE == 1024 * 1024
-        
+
         # Should not be excessive
         assert MAX_MESSAGE_SIZE <= 10 * 1024 * 1024

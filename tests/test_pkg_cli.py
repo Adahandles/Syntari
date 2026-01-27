@@ -457,8 +457,9 @@ version = "1.0.0"
 
     args = argparse.Namespace()
 
-    with patch("src.pkg.cli.PackageRegistry") as MockRegistry, \
-         patch.dict(os.environ, {"SYNTARI_REGISTRY_API_KEY": "test-api-key"}):
+    with patch("src.pkg.cli.PackageRegistry") as MockRegistry, patch.dict(
+        os.environ, {"SYNTARI_REGISTRY_API_KEY": "test-api-key"}
+    ):
         mock_registry = MagicMock()
         mock_registry.publish_package.return_value = True
         MockRegistry.return_value = mock_registry
@@ -478,9 +479,9 @@ version = "1.0.0"
 
     args = argparse.Namespace()
 
-    with patch("src.pkg.cli.PackageRegistry") as MockRegistry, \
-         patch("sys.stderr"), \
-         patch.dict(os.environ, {"SYNTARI_REGISTRY_API_KEY": "test-api-key"}):
+    with patch("src.pkg.cli.PackageRegistry") as MockRegistry, patch("sys.stderr"), patch.dict(
+        os.environ, {"SYNTARI_REGISTRY_API_KEY": "test-api-key"}
+    ):
         mock_registry = MagicMock()
         mock_registry.publish_package.return_value = False
         MockRegistry.return_value = mock_registry
@@ -504,10 +505,11 @@ version = "1.0.0"
     with patch.dict(os.environ, {}, clear=False):
         if "SYNTARI_REGISTRY_API_KEY" in os.environ:
             del os.environ["SYNTARI_REGISTRY_API_KEY"]
-        
+
         result = cmd_publish(args)
 
         assert result == 1
+
 
 def test_cmd_publish_exception(temp_dir):
     """Test publish with exception"""
@@ -519,9 +521,9 @@ version = "1.0.0"
 
     args = argparse.Namespace()
 
-    with patch("src.pkg.cli.PackageRegistry") as MockRegistry, \
-         patch("sys.stderr"), \
-         patch.dict(os.environ, {"SYNTARI_REGISTRY_API_KEY": "test-api-key"}):
+    with patch("src.pkg.cli.PackageRegistry") as MockRegistry, patch("sys.stderr"), patch.dict(
+        os.environ, {"SYNTARI_REGISTRY_API_KEY": "test-api-key"}
+    ):
         MockRegistry.side_effect = Exception("Registry error")
 
         result = cmd_publish(args)
