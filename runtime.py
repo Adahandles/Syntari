@@ -22,9 +22,8 @@ for _name in dir(_runtime):
 
 if __name__ == "__main__":
     import sys
-    from src.vm.runtime import run_vm
 
     if len(sys.argv) < 2:
         print("Usage: python runtime.py <file.sbc>")
         sys.exit(1)
-    run_vm(sys.argv[1])
+    _runtime.run_vm(sys.argv[1])
