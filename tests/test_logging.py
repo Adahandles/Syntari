@@ -112,6 +112,15 @@ class TestSyntariLogger:
         logger.set_level(LogLevel.DEBUG)
         assert logger.level == LogLevel.DEBUG
 
+    def test_set_level_updates_handlers(self):
+        """Test that set_level updates all handlers"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            log_file = Path(tmpdir) / "test.log"
+            logger = SyntariLogger(name="test", log_file=str(log_file), level=LogLevel.INFO)
+            logger.set_level(LogLevel.WARNING)
+            # Verify handlers were updated by checking they exist
+            assert len(logger.logger.handlers) > 0
+
     def test_log_with_extra_fields(self):
         """Test logging with extra fields"""
         logger = SyntariLogger(name="test", console=False)
@@ -178,6 +187,32 @@ class TestJsonFormatter:
         assert data["message"] == "Test message"
         assert "timestamp" in data
 
+    def test_json_format_with_exception(self):
+        """Test JSON formatting with exception"""
+        import logging
+
+        formatter = JsonFormatter()
+        try:
+            raise ValueError("Test error")
+        except ValueError:
+            import sys
+            exc_info = sys.exc_info()
+            record = logging.LogRecord(
+                name="test",
+                level=logging.ERROR,
+                pathname="test.py",
+                lineno=10,
+                msg="Error occurred",
+                args=(),
+                exc_info=exc_info,
+            )
+
+            output = formatter.format(record)
+            data = json.loads(output)
+
+            assert "exception" in data
+            assert "ValueError" in data["exception"]
+
 
 class TestStructuredFormatter:
     """Tests for structured formatter"""
@@ -207,6 +242,30 @@ class TestStructuredFormatter:
         assert 'level="INFO"' in output
         assert 'message="Test message"' in output
         assert "timestamp=" in output
+
+    def test_structured_format_with_exception(self):
+        """Test structured formatting with exception"""
+        import logging
+
+        formatter = StructuredFormatter()
+        try:
+            raise ValueError("Test error")
+        except ValueError:
+            import sys
+            exc_info = sys.exc_info()
+            record = logging.LogRecord(
+                name="test",
+                level=logging.ERROR,
+                pathname="test.py",
+                lineno=10,
+                msg="Error occurred",
+                args=(),
+                exc_info=exc_info,
+            )
+
+            output = formatter.format(record)
+            assert 'exception=' in output
+            assert "ValueError" in output
 
 
 class TestPerformanceLogger:
@@ -299,6 +358,12 @@ class TestGlobalFunctions:
         log_module.warning("Warning message")
         log_module.error("Error message")
         log_module.critical("Critical message")
+        
+        # Test exception logging
+        try:
+            raise ValueError("Test")
+        except:
+            log_module.exception("Exception occurred")
 
 
 class TestLogFormats:

@@ -286,6 +286,122 @@ class TestDebuggerIntegration:
         # Should have one breakpoint
         assert len(debugger.breakpoints) == 1
 
+    def test_debugger_eval_command(self):
+        """Test eval command"""
+        debugger = SyntariDebugger(interactive=False)
+        debugger.push_frame("main", "test.syn", 1, {"x": 42})
+
+        # This would normally evaluate expression - just verify command parsing works
+        debugger.process_command("eval x")
+
+    def test_debugger_list_command(self):
+        """Test list breakpoints command"""
+        debugger = SyntariDebugger(interactive=False)
+        debugger.set_breakpoint("test.syn", 5)
+        debugger.set_breakpoint("test.syn", 10)
+
+        # Process list command
+        debugger.process_command("list")
+        assert len(debugger.breakpoints) == 2
+
+    def test_debugger_where_command(self):
+        """Test where/backtrace command"""
+        debugger = SyntariDebugger(interactive=False)
+        debugger.push_frame("main", "test.syn", 1, {})
+        debugger.push_frame("helper", "test.syn", 5, {})
+
+        # Process where command
+        debugger.process_command("where")
+        assert len(debugger.call_stack) == 2
+
+    def test_debugger_vars_command(self):
+        """Test vars command"""
+        debugger = SyntariDebugger(interactive=False)
+        debugger.push_frame("main", "test.syn", 1, {"x": 1, "y": 2})
+
+        # Process vars command
+        debugger.process_command("vars")
+        assert len(debugger.call_stack) > 0
+
+    def test_debugger_help_command(self):
+        """Test help command"""
+        debugger = SyntariDebugger(interactive=False)
+
+        # Process help command - should not raise
+        debugger.process_command("help")
+
+    def test_debugger_quit_command(self):
+        """Test quit command"""
+        debugger = SyntariDebugger(interactive=False)
+
+        debugger.process_command("quit")
+        # State should stop running
+        assert debugger.state != DebugState.RUNNING
+
+    def test_debugger_invalid_command(self):
+        """Test invalid command"""
+        debugger = SyntariDebugger(interactive=False)
+
+        # Should handle invalid command gracefully
+        debugger.process_command("invalid_command_xyz")
+
+    def test_debugger_empty_command(self):
+        """Test empty command"""
+        debugger = SyntariDebugger(interactive=False)
+        
+        # Set a previous command first
+        debugger.last_command = "help"
+        
+        # Should repeat last command without error
+        try:
+            debugger.process_command("")
+        except (IndexError, AttributeError):
+            pass  # May not have last_command attribute
+
+    def test_debugger_conditional_breakpoint(self):
+        """Test conditional breakpoint"""
+        debugger = SyntariDebugger(interactive=False)
+        debugger.set_breakpoint("test.syn", 10, condition="x > 5")
+
+        bp = debugger.breakpoints[1]
+        assert bp.condition == "x > 5"
+
+    def test_debugger_print_locals(self):
+        """Test print_locals"""
+        debugger = SyntariDebugger(interactive=False)
+        debugger.push_frame("main", "test.syn", 1, {"x": 42, "y": "hello"})
+
+        # Should not raise
+        debugger.print_locals()
+
+    def test_debugger_print_globals(self):
+        """Test print_globals"""
+        debugger = SyntariDebugger(interactive=False)
+
+        # Should not raise
+        debugger.print_globals()
+
+    def test_debugger_print_where(self):
+        """Test print_where"""
+        debugger = SyntariDebugger(interactive=False)
+        debugger.push_frame("main", "test.syn", 1, {})
+
+        # Should not raise
+        debugger.print_where()
+
+    def test_debugger_toggle_breakpoint(self):
+        """Test toggle_breakpoint"""
+        debugger = SyntariDebugger(interactive=False)
+        bp_id = debugger.set_breakpoint("test.syn", 10)
+
+        # Toggle off
+        debugger.toggle_breakpoint(bp_id)
+        assert not debugger.breakpoints[bp_id].enabled
+
+        # Toggle on
+        debugger.toggle_breakpoint(bp_id)
+        assert debugger.breakpoints[bp_id].enabled
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

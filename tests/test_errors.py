@@ -106,6 +106,19 @@ class TestSyntariError:
         s = str(error)
         assert "test.syn:10" in s
 
+    def test_error_str_with_location_and_column(self):
+        """Test error string with location and column"""
+        error = SyntariError("Test error", file="test.syn", line=10, column=5)
+        s = str(error)
+        assert "test.syn:10:5" in s
+
+    def test_error_str_with_details(self):
+        """Test error string with details"""
+        error = SyntariError("Test error", details="More information here")
+        s = str(error)
+        assert "Details:" in s
+        assert "More information here" in s
+
     def test_error_str_with_suggestions(self):
         """Test error string with suggestions"""
         error = SyntariError("Test error", suggestions=["Fix 1", "Fix 2"])
@@ -285,6 +298,36 @@ class TestErrorHandler:
         summary = handler.get_error_summary()
         assert "2 error(s)" in summary
 
+    def test_get_error_summary_with_warnings(self):
+        """Test error summary with warnings"""
+        handler = ErrorHandler()
+        handler.handle(SyntariError("Error 1"))
+        handler.handle(SyntariError("Warning 1", severity=ErrorSeverity.WARNING))
+        
+        summary = handler.get_error_summary()
+        assert "1 error(s)" in summary
+        assert "1 warning(s)" in summary
+
+    def test_handle_with_logger(self):
+        """Test error handler with logger"""
+        from unittest.mock import Mock
+        logger = Mock()
+        handler = ErrorHandler(logger=logger)
+        
+        # Handle error
+        handler.handle(SyntariError("Test error"))
+        logger.error.assert_called_once()
+        
+        # Handle warning
+        logger.reset_mock()
+        handler.handle(SyntariError("Test warning", severity=ErrorSeverity.WARNING))
+        logger.warning.assert_called_once()
+        
+        # Handle critical
+        logger.reset_mock()
+        with pytest.raises(SyntariError):
+            handler.handle(SyntariError("Critical", severity=ErrorSeverity.CRITICAL))
+
 
 class TestErrorRecovery:
     """Tests for error recovery"""
@@ -337,6 +380,34 @@ class TestErrorRecovery:
         suggestions = suggest_fix(error)
         assert len(suggestions) > 0
         assert any("type" in s.lower() for s in suggestions)
+
+    def test_suggest_fix_import(self):
+        """Test suggestions for import error"""
+        error = ImportError("Module not found")
+        suggestions = suggest_fix(error)
+        assert len(suggestions) > 0
+        assert any("module" in s.lower() or "install" in s.lower() for s in suggestions)
+
+    def test_suggest_fix_io(self):
+        """Test suggestions for I/O error"""
+        error = IOError("File not found")
+        suggestions = suggest_fix(error)
+        assert len(suggestions) > 0
+        assert any("file" in s.lower() or "permission" in s.lower() for s in suggestions)
+
+    def test_suggest_fix_security(self):
+        """Test suggestions for security error"""
+        error = SecurityError("Unauthorized access")
+        suggestions = suggest_fix(error)
+        assert len(suggestions) > 0
+        assert any("security" in s.lower() or "polic" in s.lower() for s in suggestions)
+
+    def test_suggest_fix_network(self):
+        """Test suggestions for network error"""
+        error = NetworkError("Connection failed")
+        suggestions = suggest_fix(error)
+        assert len(suggestions) > 0
+        assert any("network" in s.lower() or "connect" in s.lower() for s in suggestions)
 
 
 class TestErrorCodes:

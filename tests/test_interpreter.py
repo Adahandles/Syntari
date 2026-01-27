@@ -504,3 +504,96 @@ class TestEdgeCases:
         """
         result = run_code(source)
         assert result == 6
+
+    def test_nested_arithmetic(self):
+        """Test nested arithmetic expressions"""
+        result = run_code("((2 + 3) * 4) - (10 / 2)")
+        assert result == 15.0
+
+    def test_mixed_types(self):
+        """Test mixed integer and float"""
+        result = run_code("10 + 3.5")
+        assert result == 13.5
+
+    def test_string_variable(self):
+        """Test string variables"""
+        source = '''let msg = "Hello"
+msg'''
+        result = run_code(source)
+        assert result == "Hello"
+
+    def test_modulo_operation(self):
+        """Test modulo operator"""
+        result = run_code("10 % 3")
+        assert result == 1
+
+    def test_function_with_default_return(self):
+        """Test function with no explicit return"""
+        source = """
+        fn test() {
+            let x = 1
+        }
+        test()
+        """
+        result = run_code(source)
+        assert result is None
+
+    def test_function_multiple_params(self):
+        """Test function with multiple parameters"""
+        source = """
+        fn sum(a, b, c) {
+            return a + b + c
+        }
+        sum(1, 2, 3)
+        """
+        result = run_code(source)
+        assert result == 6
+
+    def test_nested_function_calls(self):
+        """Test nested function calls"""
+        source = """
+        fn double(x) { return x * 2 }
+        fn triple(x) { return x * 3 }
+        double(triple(5))
+        """
+        result = run_code(source)
+        assert result == 30
+
+    def test_return_early(self):
+        """Test early return from function"""
+        source = """
+        fn check(x) {
+            if (x < 0) {
+                return "negative"
+            }
+            return "non-negative"
+        }
+        check(-5)
+        """
+        result = run_code(source)
+        assert result == "negative"
+
+    def test_empty_function(self):
+        """Test empty function body"""
+        source = """
+        fn noop() {}
+        noop()
+        """
+        result = run_code(source)
+        assert result is None
+
+    def test_complex_expression(self):
+        """Test complex nested expression"""
+        result = run_code("(2 + 3) * (4 - 1)")
+        assert result == 15
+
+    def test_chained_assignment(self):
+        """Test variable reassignment"""
+        source = """
+        let x = 5
+        x = 10
+        x = 15
+        x
+        """
+        result = run_code(source)
+        assert result == 15

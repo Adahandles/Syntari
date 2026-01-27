@@ -317,7 +317,7 @@ def main():
     cache_parser.add_argument("--clear", action="store_true", help="Clear cache")
 
     # publish command
-    publish_parser = subparsers.add_parser("publish", help="Publish package to registry")
+    subparsers.add_parser("publish", help="Publish package to registry")
 
     args = parser.parse_args()
 

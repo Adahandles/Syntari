@@ -127,3 +127,6 @@ Desktop.ini
 node_modules/
 package-lock.json
 yarn.lock
+coverage.json
+htmlcov/
+.coverage
