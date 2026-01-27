@@ -233,10 +233,12 @@ jobs:
 
     - name: Verify GPL compatibility
       run: |
-        # Check for incompatible licenses (GPL in proprietary code)
+        # Check for incompatible licenses (GPL/AGPL in proprietary code)
         if pip-licenses | grep -iE "(GPL|AGPL)" | grep -v LGPL; then
-          echo "⚠️ Warning: Found GPL-licensed dependencies"
-          echo "Verify compatibility with proprietary license"
+          echo "Error: Found GPL- or AGPL-licensed dependencies that may be incompatible with the"
+          echo "proprietary license. Please remove or replace these dependencies, or obtain"
+          echo "explicit legal approval before proceeding."
+          exit 1
         fi
 
     - name: Upload license report
