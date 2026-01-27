@@ -37,20 +37,6 @@ jobs:
         head: HEAD
         extra_args: --only-verified --json --fail
 
-    - name: Scan for API keys and tokens
-      run: |
-        echo "Scanning for common secret patterns..."
-        
-        # Check for common secret patterns (excluding comments and variable declarations)
-        # This is a basic check - TruffleHog provides more thorough scanning
-        if grep -r -E "(api[_-]?key\s*=|secret[_-]?key\s*=|private[_-]?key\s*=|token\s*=|password\s*=)" --include="*.py" --include="*.yml" --include="*.yaml" . | grep -v "^[[:space:]]*#"; then
-          echo "⚠️ Warning: Found potential hardcoded secrets in code"
-          echo "Please verify these are not actual secrets"
-        else
-          echo "✅ No obvious hardcoded secrets found"
-        fi
-      continue-on-error: true
-
     - name: Check for sensitive files
       run: |
         echo "Checking for sensitive files..."
