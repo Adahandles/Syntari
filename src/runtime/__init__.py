@@ -13,9 +13,9 @@ from .vm_v2 import (
 )
 
 __all__ = [
-    'SyntariVMV2',
-    'run_bytecode',
-    'VMSecurityError',
-    'VMRuntimeError',
-    'CallFrame',
+    "SyntariVMV2",
+    "run_bytecode",
+    "VMSecurityError",
+    "VMRuntimeError",
+    "CallFrame",
 ]
