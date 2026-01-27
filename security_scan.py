@@ -23,7 +23,7 @@ def run_command(cmd, description):
     try:
         result = subprocess.run(
             cmd,
-            shell=True,
+            shell=True,  # nosec B602 - This is a security scanning tool that needs shell
             capture_output=True,
             text=True,
             timeout=300

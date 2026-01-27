@@ -99,7 +99,7 @@ class TestPathTraversalPrevention:
     def test_validates_file_exists(self):
         """Test that validation fails for non-existent files"""
         with pytest.raises(ValueError, match="does not exist"):
-            _validate_file_path("/tmp/nonexistent_file_12345.syn")
+            _validate_file_path("/tmp/nonexistent_file_12345.syn")  # nosec B108
 
     def test_validates_file_extension(self):
         """Test that file extension validation works"""
