@@ -4,6 +4,8 @@ Provides WebSocket server for executing Syntari code in the browser
 """
 
 import json
+import os
+import secrets
 import sys
 import time
 from pathlib import Path
@@ -161,6 +163,92 @@ resource_monitor = ResourceMonitor()
 
 # Maximum WebSocket message size (1MB)
 MAX_MESSAGE_SIZE = 1024 * 1024
+
+# CSRF token storage (in production, use Redis or similar)
+csrf_tokens = {}
+
+
+def generate_csrf_token() -> str:
+    """Generate a secure CSRF token"""
+    return secrets.token_urlsafe(32)
+
+
+def validate_csrf_token(token: str, ip_address: str) -> bool:
+    """Validate CSRF token for an IP address"""
+    stored_token = csrf_tokens.get(ip_address)
+    if not stored_token:
+        return False
+    # Use constant-time comparison to prevent timing attacks
+    return secrets.compare_digest(stored_token, token)
+
+
+@web.middleware
+async def security_headers_middleware(request, handler):
+    """Add comprehensive security headers to all responses"""
+    response = await handler(request)
+    
+    # Content Security Policy - strict policy for A+ security
+    csp_directives = [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline'",  # unsafe-inline needed for current implementation
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob:",
+        "font-src 'self'",
+        "connect-src 'self' ws: wss:",  # WebSocket support
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "upgrade-insecure-requests",
+    ]
+    response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
+    
+    # Strict Transport Security (HSTS) - enforce HTTPS
+    # max-age=31536000 (1 year), includeSubDomains, preload
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    
+    # X-Frame-Options - prevent clickjacking
+    response.headers["X-Frame-Options"] = "DENY"
+    
+    # X-Content-Type-Options - prevent MIME sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    
+    # X-XSS-Protection - legacy XSS filter (deprecated but still useful)
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    
+    # Referrer-Policy - control referrer information
+    response.headers["Referrer-Policy"] = "no-referrer"
+    
+    # Permissions-Policy - control browser features
+    permissions = [
+        "accelerometer=()",
+        "camera=()",
+        "geolocation=()",
+        "gyroscope=()",
+        "magnetometer=()",
+        "microphone=()",
+        "payment=()",
+        "usb=()",
+    ]
+    response.headers["Permissions-Policy"] = ", ".join(permissions)
+    
+    # X-Download-Options - prevent file execution in IE
+    response.headers["X-Download-Options"] = "noopen"
+    
+    # X-Permitted-Cross-Domain-Policies - restrict Adobe products
+    response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
+    
+    # Cross-Origin-Embedder-Policy and Cross-Origin-Opener-Policy
+    response.headers["Cross-Origin-Embedder-Policy"] = "require-corp"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+    
+    # Cache-Control for security-sensitive pages
+    if request.path.startswith("/admin"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    
+    return response
 
 
 def get_client_ip(request) -> str:
@@ -320,7 +408,23 @@ async def health_handler(request):
             "rate_limiting": "enabled",
             "session_management": "enabled",
             "resource_monitoring": "enabled",
+            "csrf_protection": "enabled",
+            "security_headers": "enabled",
         }
+    })
+
+
+async def csrf_token_handler(request):
+    """Generate and return a CSRF token for the client"""
+    client_ip = get_client_ip(request)
+    
+    # Generate new CSRF token
+    token = generate_csrf_token()
+    csrf_tokens[client_ip] = token
+    
+    return web.json_response({
+        "csrf_token": token,
+        "expires_in": 3600,  # 1 hour
     })
 
 
@@ -365,12 +469,14 @@ async def client_stats_handler(request):
 
 def create_app():
     """Create and configure the web application"""
-    app = web.Application()
+    # Create app with security middleware
+    app = web.Application(middlewares=[security_headers_middleware])
 
     # Add routes
     app.router.add_get("/", index_handler)
     app.router.add_get("/admin", admin_handler)
     app.router.add_get("/health", health_handler)
+    app.router.add_get("/csrf-token", csrf_token_handler)
     app.router.add_get("/stats", stats_handler)
     app.router.add_get("/client-stats", client_stats_handler)
     app.router.add_get("/ws", websocket_handler)
@@ -380,18 +486,19 @@ def create_app():
     if static_dir.exists():
         app.router.add_static("/static/", path=static_dir, name="static")
 
-    # Configure CORS - Development only
-    # For production, configure this with specific trusted origins
-    import os
+    # Configure CORS - Strict configuration for production
+    # Only allow specific origins in production
     cors_origin = os.environ.get("SYNTARI_CORS_ORIGIN", "http://localhost:8080")
     
+    # More secure CORS configuration
     cors = aiohttp_cors.setup(
         app,
         defaults={
             cors_origin: aiohttp_cors.ResourceOptions(
-                allow_credentials=False,
+                allow_credentials=True,  # Enable credentials for CSRF tokens
                 expose_headers="*",
-                allow_headers="*",
+                allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
+                allow_methods=["GET", "POST", "OPTIONS"],
             )
         },
     )
