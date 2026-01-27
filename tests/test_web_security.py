@@ -39,9 +39,7 @@ class TestRateLimiter:
     def test_ban_after_violations(self):
         """Test that clients are banned after repeated violations"""
         config = RateLimitConfig(
-            requests_per_minute=2,
-            ban_threshold=3,
-            ban_duration=1  # 1 second for testing
+            requests_per_minute=2, ban_threshold=3, ban_duration=1  # 1 second for testing
         )
         limiter = RateLimiter(config)
 
@@ -61,7 +59,7 @@ class TestRateLimiter:
 
         # Clear old requests so we don't immediately hit rate limit again
         limiter.clients[ip].requests.clear()
-        
+
         # Should be unbanned now and able to make request
         allowed, reason = limiter.check_rate_limit(ip)
         assert allowed
@@ -94,7 +92,7 @@ class TestRateLimiter:
 
         # Initialize client first
         limiter.check_rate_limit(ip)
-        
+
         # Record normal execution
         limiter.record_execution_time(ip, 0.05, 50, True)
         stats = limiter.get_client_stats(ip)
@@ -164,10 +162,10 @@ class TestSessionManager:
     def test_create_session(self):
         """Test session creation"""
         manager = SessionManager()
-        
+
         ip = "192.168.1.30"
         result = manager.create_session(ip)
-        
+
         assert result is not None
         session_id, session_token = result
         assert len(session_id) > 0
@@ -176,16 +174,16 @@ class TestSessionManager:
     def test_validate_session(self):
         """Test session validation"""
         manager = SessionManager()
-        
+
         ip = "192.168.1.31"
         session_id, session_token = manager.create_session(ip)
-        
+
         # Valid session should validate
         assert manager.validate_session(session_id, session_token, ip)
-        
+
         # Invalid token should fail
         assert not manager.validate_session(session_id, "wrong-token", ip)
-        
+
         # Wrong IP should fail
         assert not manager.validate_session(session_id, session_token, "192.168.1.99")
 
@@ -193,16 +191,16 @@ class TestSessionManager:
         """Test session timeout"""
         config = SessionConfig(session_timeout=1)  # 1 second timeout
         manager = SessionManager(config)
-        
+
         ip = "192.168.1.32"
         session_id, session_token = manager.create_session(ip)
-        
+
         # Should be valid immediately
         assert manager.validate_session(session_id, session_token, ip)
-        
+
         # Wait for timeout
         time.sleep(1.1)
-        
+
         # Should be invalid after timeout
         assert not manager.validate_session(session_id, session_token, ip)
 
@@ -210,15 +208,15 @@ class TestSessionManager:
         """Test maximum sessions per IP limit"""
         config = SessionConfig(max_sessions_per_ip=2)
         manager = SessionManager(config)
-        
+
         ip = "192.168.1.33"
-        
+
         # First 2 sessions should succeed
         session1 = manager.create_session(ip)
         session2 = manager.create_session(ip)
         assert session1 is not None
         assert session2 is not None
-        
+
         # 3rd session should fail
         session3 = manager.create_session(ip)
         assert session3 is None
@@ -226,28 +224,28 @@ class TestSessionManager:
     def test_session_removal(self):
         """Test session removal"""
         manager = SessionManager()
-        
+
         ip = "192.168.1.34"
         session_id, session_token = manager.create_session(ip)
-        
+
         # Should be valid
         assert manager.validate_session(session_id, session_token, ip)
-        
+
         # Remove session
         manager.remove_session(session_id, session_token)
-        
+
         # Should be invalid after removal
         assert not manager.validate_session(session_id, session_token, ip)
 
     def test_session_stats(self):
         """Test session statistics"""
         manager = SessionManager()
-        
+
         # Create some sessions
         manager.create_session("192.168.1.40")
         manager.create_session("192.168.1.41")
         manager.create_session("192.168.1.42")
-        
+
         stats = manager.get_stats()
         assert stats["total_sessions"] == 3
         assert stats["unique_ips"] == 3
@@ -259,10 +257,10 @@ class TestResourceMonitor:
     def test_record_execution(self):
         """Test recording execution metrics"""
         monitor = ResourceMonitor()
-        
+
         identifier = "session-123"
         monitor.record_execution(identifier, 0.5, 10.0)
-        
+
         metrics = monitor.get_metrics(identifier)
         assert metrics["count"] == 1
         assert metrics["avg_execution_time"] == 0.5
@@ -271,19 +269,21 @@ class TestResourceMonitor:
     def test_metrics_window(self):
         """Test metrics time window"""
         monitor = ResourceMonitor()
-        
+
         identifier = "session-124"
-        
+
         # Record old execution (outside window)
-        monitor.execution_times[identifier].append({
-            "timestamp": time.time() - 120,  # 2 minutes ago
-            "execution_time": 1.0,
-            "memory_mb": 5.0,
-        })
-        
+        monitor.execution_times[identifier].append(
+            {
+                "timestamp": time.time() - 120,  # 2 minutes ago
+                "execution_time": 1.0,
+                "memory_mb": 5.0,
+            }
+        )
+
         # Record recent execution
         monitor.record_execution(identifier, 0.5, 10.0)
-        
+
         # Only recent execution should be in 60-second window
         metrics = monitor.get_metrics(identifier, window=60)
         assert metrics["count"] == 1
@@ -292,13 +292,13 @@ class TestResourceMonitor:
     def test_multiple_executions(self):
         """Test multiple execution recordings"""
         monitor = ResourceMonitor()
-        
+
         identifier = "session-125"
-        
+
         # Record multiple executions
         for i in range(5):
             monitor.record_execution(identifier, 0.1 * (i + 1), 5.0)
-        
+
         metrics = monitor.get_metrics(identifier)
         assert metrics["count"] == 5
         assert metrics["max_execution_time"] == 0.5  # 0.1 * 5
@@ -365,7 +365,7 @@ class TestSecurityHelpers:
             "open('/etc/passwd')",
             "__builtins__.eval",
         ]
-        
+
         for code in dangerous_codes:
             safe, reason = validate_code_safety(code)
             assert not safe, f"Code '{code}' should be flagged as unsafe"

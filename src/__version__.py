@@ -38,9 +38,11 @@ API_VERSION = "0.4"
 MIN_PYTHON_VERSION = (3, 8)
 MAX_PYTHON_VERSION = (3, 12)
 
+
 def get_version():
     """Return the version string"""
     return __version__
+
 
 def get_version_info():
     """Return detailed version information"""
@@ -54,6 +56,7 @@ def get_version_info():
         "features": FEATURES,
     }
 
+
 def print_version_info():
     """Print formatted version information"""
     info = get_version_info()
@@ -62,9 +65,10 @@ def print_version_info():
     print(f"Production Ready: {'Yes' if info['production_ready'] else 'No'}")
     print(f"API Version: {info['api_version']}")
     print(f"\nEnabled Features:")
-    for feature, enabled in info['features'].items():
+    for feature, enabled in info["features"].items():
         status = "✓" if enabled else "✗"
         print(f"  {status} {feature.replace('_', ' ').title()}")
+
 
 if __name__ == "__main__":
     print_version_info()
