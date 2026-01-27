@@ -207,11 +207,11 @@ def test_cmd_install_specific_package_with_version():
         mock_cache = MagicMock()
         mock_cache.is_cached.return_value = False
         mock_cache.cache_dir = MagicMock()
-        mock_cache.cache_dir.__truediv__ = lambda self, x: Path("/tmp/cache") / x
+        mock_cache.cache_dir.__truediv__ = lambda self, x: Path("/tmp/cache") / x  # nosec B108
         MockCache.return_value = mock_cache
 
         mock_registry = MagicMock()
-        mock_registry.download_package.return_value = Path("/tmp/pkg.tar.gz")
+        mock_registry.download_package.return_value = Path("/tmp/pkg.tar.gz")  # nosec B108
         MockRegistry.return_value = mock_registry
 
         with patch("pathlib.Path.mkdir"):
@@ -262,7 +262,7 @@ def test_cmd_install_specific_package_download_error():
     ) as MockRegistry, patch("sys.stderr"):
         mock_cache = MagicMock()
         mock_cache.is_cached.return_value = False
-        mock_cache.cache_dir = Path("/tmp/cache")
+        mock_cache.cache_dir = Path("/tmp/cache")  # nosec B108
         MockCache.return_value = mock_cache
 
         mock_registry = MagicMock()

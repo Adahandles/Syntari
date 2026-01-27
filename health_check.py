@@ -4,7 +4,7 @@ Health check script for Syntari deployment verification
 """
 
 import sys
-import subprocess
+import subprocess  # nosec B404 - subprocess module needed for health checks
 import json
 from pathlib import Path
 
@@ -69,7 +69,7 @@ def check_tests():
 def check_version():
     """Check if version command works"""
     try:
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603, B607 - Safe subprocess call with trusted input
             ["python3", "main.py", "--version"],
             capture_output=True,
             text=True,
@@ -87,7 +87,7 @@ def check_repl():
     """Check if REPL can start (basic check)"""
     try:
         # Just check if the command accepts the --repl flag
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603, B607 - Safe subprocess call with trusted input
             ["python3", "main.py", "--help"],
             capture_output=True,
             text=True,

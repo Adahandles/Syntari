@@ -8,7 +8,7 @@ Runs multiple security checks and generates a detailed report.
 
 import json
 import os
-import subprocess
+import subprocess  # nosec B404 - subprocess module needed for security scanning
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -23,7 +23,7 @@ def run_command(cmd, description):
     try:
         result = subprocess.run(
             cmd,
-            shell=True,
+            shell=True,  # nosec B602 - This is a security scanning tool that needs shell
             capture_output=True,
             text=True,
             timeout=300

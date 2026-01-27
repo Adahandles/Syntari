@@ -120,7 +120,7 @@ class BranchProtectionManager:
         print(f"\n⚙️  Applying protection to branch '{branch}'...")
 
         try:
-            response = requests.put(url, headers=self.headers, json=config)
+            response = requests.put(url, headers=self.headers, json=config, timeout=30)
 
             if response.status_code == 200:
                 print(f"✅ Successfully protected branch '{branch}'")
@@ -139,7 +139,7 @@ class BranchProtectionManager:
         """Verify that branch exists in repository"""
         url = f"{self.base_url}/branches/{branch}"
         try:
-            response = requests.get(url, headers=self.headers)
+            response = requests.get(url, headers=self.headers, timeout=30)
             return response.status_code == 200
         except Exception:
             return False
@@ -148,7 +148,7 @@ class BranchProtectionManager:
         """Get current branch protection settings"""
         url = f"{self.base_url}/branches/{branch}/protection"
         try:
-            response = requests.get(url, headers=self.headers)
+            response = requests.get(url, headers=self.headers, timeout=30)
             if response.status_code == 200:
                 return response.json()
             return None

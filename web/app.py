@@ -331,7 +331,10 @@ async def stats_handler(request):
     
     # Simple authentication check (you should use proper auth in production)
     auth_token = request.headers.get("Authorization")
-    if not auth_token or auth_token != "Bearer admin-token-change-me":
+    expected_token = os.environ.get("ADMIN_AUTH_TOKEN", "")
+    if not expected_token:
+        return web.json_response({"error": "Authentication not configured"}, status=503)
+    if not auth_token or auth_token != f"Bearer {expected_token}":
         return web.json_response({"error": "Unauthorized"}, status=401)
     
     # Gather statistics
