@@ -269,7 +269,8 @@ class TestSSRFValidation(unittest.TestCase):
         """Test when DNS resolution fails"""
         # Mock DNS lookup to fail
         import socket
-        with patch('socket.gethostbyname', side_effect=socket.gaierror("DNS lookup failed")):
+
+        with patch("socket.gethostbyname", side_effect=socket.gaierror("DNS lookup failed")):
             # Should still raise error when DNS fails (can't verify safety)
             try:
                 net._validate_url("http://example.com")
@@ -293,6 +294,7 @@ class TestSSRFValidation(unittest.TestCase):
     def test_validate_url_for_tests_non_test_env(self):
         """Test that test function fails outside test env"""
         import os
+
         old_env = os.environ.get("SYNTARI_ENV")
         try:
             if "SYNTARI_ENV" in os.environ:
@@ -322,6 +324,7 @@ class TestSSRFValidation(unittest.TestCase):
     def test_validate_url_for_tests_dns_failure(self, mock_gethostbyname):
         """Test test function with DNS failure"""
         import socket
+
         mock_gethostbyname.side_effect = socket.gaierror("DNS lookup failed")
         # Should not raise in test mode with DNS failure
         try:

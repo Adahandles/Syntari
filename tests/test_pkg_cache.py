@@ -141,7 +141,7 @@ def test_add_package_replaces_existing(temp_cache, sample_package):
     # Add package first time
     temp_cache.add_package("test-pkg", "1.0.0", sample_package)
     assert temp_cache.is_cached("test-pkg", "1.0.0")
-    
+
     # Add again with same version (should replace)
     temp_cache.add_package("test-pkg", "1.0.0", sample_package)
     assert temp_cache.is_cached("test-pkg", "1.0.0")
@@ -159,13 +159,13 @@ def test_format_size_large(temp_cache):
     size_tb = 5 * 1024 * 1024 * 1024 * 1024  # 5 TB
     formatted = temp_cache.format_size(size_tb)
     assert "TB" in formatted
-    
+
     # Test GB size
     size_gb = 2.5 * 1024 * 1024 * 1024
     formatted = temp_cache.format_size(size_gb)
     assert "GB" in formatted
-    
-    # Test MB size  
+
+    # Test MB size
     size_mb = 100 * 1024 * 1024
     formatted = temp_cache.format_size(size_mb)
     assert "MB" in formatted

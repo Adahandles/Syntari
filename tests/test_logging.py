@@ -196,6 +196,7 @@ class TestJsonFormatter:
             raise ValueError("Test error")
         except ValueError:
             import sys
+
             exc_info = sys.exc_info()
             record = logging.LogRecord(
                 name="test",
@@ -252,6 +253,7 @@ class TestStructuredFormatter:
             raise ValueError("Test error")
         except ValueError:
             import sys
+
             exc_info = sys.exc_info()
             record = logging.LogRecord(
                 name="test",
@@ -264,7 +266,7 @@ class TestStructuredFormatter:
             )
 
             output = formatter.format(record)
-            assert 'exception=' in output
+            assert "exception=" in output
             assert "ValueError" in output
 
 
@@ -358,7 +360,7 @@ class TestGlobalFunctions:
         log_module.warning("Warning message")
         log_module.error("Error message")
         log_module.critical("Critical message")
-        
+
         # Test exception logging
         try:
             raise ValueError("Test")

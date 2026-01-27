@@ -21,7 +21,7 @@ def temp_dir():
 def registry():
     """Create a registry instance with test data"""
     reg = PackageRegistry("https://test.registry.dev")
-    
+
     # Add some test packages
     pkg1 = RegistryPackage(
         name="test-pkg",
@@ -30,9 +30,9 @@ def registry():
         author="Test Author",
         download_url="https://test.dev/pkg-1.0.0.tar.gz",
         checksum="abc123",
-        dependencies={}
+        dependencies={},
     )
-    
+
     pkg2 = RegistryPackage(
         name="test-pkg",
         version="1.1.0",
@@ -40,9 +40,9 @@ def registry():
         author="Test Author",
         download_url="https://test.dev/pkg-1.1.0.tar.gz",
         checksum="def456",
-        dependencies={}
+        dependencies={},
     )
-    
+
     pkg3 = RegistryPackage(
         name="another-pkg",
         version="2.0.0",
@@ -50,13 +50,13 @@ def registry():
         author="Another Author",
         download_url="https://test.dev/another-2.0.0.tar.gz",
         checksum="ghi789",
-        dependencies={"test-pkg": "^1.0.0"}
+        dependencies={"test-pkg": "^1.0.0"},
     )
-    
+
     reg.add_local_package(pkg1)
     reg.add_local_package(pkg2)
     reg.add_local_package(pkg3)
-    
+
     return reg
 
 
@@ -83,9 +83,9 @@ def test_add_local_package():
         author="Author",
         download_url="https://test.dev/test.tar.gz",
         checksum="abc",
-        dependencies={}
+        dependencies={},
     )
-    
+
     reg.add_local_package(pkg)
     assert "test" in reg.local_index
     assert "1.0.0" in reg.local_index["test"]
@@ -161,7 +161,7 @@ def test_get_available_versions_not_found(registry):
 def test_get_available_versions_sorting(registry):
     """Test version sorting"""
     reg = PackageRegistry()
-    
+
     for version in ["1.0.0", "1.10.0", "1.2.0", "2.0.0", "1.0.10"]:
         pkg = RegistryPackage(
             name="sorttest",
@@ -170,10 +170,10 @@ def test_get_available_versions_sorting(registry):
             author="Author",
             download_url="https://test.dev",
             checksum="abc",
-            dependencies={}
+            dependencies={},
         )
         reg.add_local_package(pkg)
-    
+
     versions = reg.get_available_versions("sorttest")
     assert versions == ["2.0.0", "1.10.0", "1.2.0", "1.0.10", "1.0.0"]
 
@@ -181,11 +181,11 @@ def test_get_available_versions_sorting(registry):
 def test_download_package(registry, temp_dir):
     """Test downloading a package"""
     pkg_path = registry.download_package("test-pkg", "1.0.0", temp_dir)
-    
+
     assert pkg_path.exists()
     assert pkg_path.is_dir()
     assert pkg_path.name == "test-pkg-1.0.0"
-    
+
     # Check manifest was created
     manifest = pkg_path / "syntari.toml"
     assert manifest.exists()
@@ -205,7 +205,7 @@ def test_download_package_creates_directory(registry, temp_dir):
     """Test download creates necessary directories"""
     dest = temp_dir / "nested" / "path"
     pkg_path = registry.download_package("test-pkg", "1.0.0", dest)
-    
+
     assert pkg_path.exists()
     assert pkg_path.parent == dest
 
@@ -214,10 +214,10 @@ def test_publish_package(registry, temp_dir):
     """Test publishing a package"""
     manifest_path = temp_dir / "syntari.toml"
     manifest_path.write_text("[package]\nname = 'test'\nversion = '1.0.0'")
-    
+
     package_dir = temp_dir / "src"
     package_dir.mkdir()
-    
+
     result = registry.publish_package(manifest_path, package_dir, "fake-api-key")
     assert result is True
 
@@ -231,9 +231,9 @@ def test_registry_package_dataclass():
         author="Test Author",
         download_url="https://example.com/test.tar.gz",
         checksum="abc123def456",
-        dependencies={"dep1": "^1.0.0", "dep2": "~2.0.0"}
+        dependencies={"dep1": "^1.0.0", "dep2": "~2.0.0"},
     )
-    
+
     assert pkg.name == "test"
     assert pkg.version == "1.0.0"
     assert pkg.description == "A test package"

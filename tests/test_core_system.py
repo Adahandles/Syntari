@@ -126,7 +126,7 @@ def test_input_error_handling():
     """Test input handles errors gracefully"""
     mock_stdin = MagicMock()
     mock_stdin.readline.side_effect = IOError("Read error")
-    
+
     with patch("sys.stdin", mock_stdin):
         with patch("sys.stdout", new_callable=io.StringIO):
             with pytest.raises(RuntimeError) as exc_info:

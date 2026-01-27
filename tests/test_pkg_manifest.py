@@ -159,7 +159,7 @@ def test_manifest_from_dict_detailed_deps():
 def test_manifest_from_dict_missing_name():
     """Test parsing manifest without name"""
     data = {"package": {"version": "1.0.0"}}
-    
+
     with pytest.raises(ValueError, match="name is required"):
         PackageManifest.from_dict(data)
 
@@ -167,7 +167,7 @@ def test_manifest_from_dict_missing_name():
 def test_manifest_from_dict_missing_version():
     """Test parsing manifest without version"""
     data = {"package": {"name": "test-pkg"}}
-    
+
     with pytest.raises(ValueError, match="version is required"):
         PackageManifest.from_dict(data)
 
@@ -175,7 +175,7 @@ def test_manifest_from_dict_missing_version():
 def test_manifest_from_dict_invalid_name():
     """Test parsing manifest with invalid name"""
     data = {"package": {"name": "Invalid-Name!", "version": "1.0.0"}}
-    
+
     with pytest.raises(ValueError, match="Invalid package name"):
         PackageManifest.from_dict(data)
 
@@ -183,7 +183,7 @@ def test_manifest_from_dict_invalid_name():
 def test_manifest_from_dict_invalid_version():
     """Test parsing manifest with invalid version"""
     data = {"package": {"name": "test-pkg", "version": "invalid"}}
-    
+
     with pytest.raises(ValueError, match="Invalid version"):
         PackageManifest.from_dict(data)
 
@@ -200,7 +200,7 @@ description = "Test"
 core = "^1.0.0"
 """)
         temp_path = Path(f.name)
-    
+
     try:
         manifest = PackageManifest.from_file(temp_path)
         assert manifest.name == "test-pkg"
@@ -222,7 +222,7 @@ def test_manifest_is_valid_package_name():
     assert PackageManifest._is_valid_package_name("my-package")
     assert PackageManifest._is_valid_package_name("my_package")
     assert PackageManifest._is_valid_package_name("mypackage123")
-    
+
     assert not PackageManifest._is_valid_package_name("MyPackage")  # Uppercase
     assert not PackageManifest._is_valid_package_name("my package")  # Space
     assert not PackageManifest._is_valid_package_name("123package")  # Starts with number
@@ -236,7 +236,7 @@ def test_manifest_is_valid_version():
     assert PackageManifest._is_valid_version("1.2.3-alpha")
     assert PackageManifest._is_valid_version("1.2.3+build.123")
     assert PackageManifest._is_valid_version("1.2.3-beta.1+build.456")
-    
+
     assert not PackageManifest._is_valid_version("1.0")  # Missing patch
     assert not PackageManifest._is_valid_version("1")  # Missing minor and patch
     assert not PackageManifest._is_valid_version("v1.0.0")  # Has 'v' prefix
@@ -290,7 +290,7 @@ def test_version_comparison_different_lengths():
     # Test via Dependency class which uses the comparison
     dep1 = Dependency("pkg", "1.0")
     dep2 = Dependency("pkg", "1.0.0.0")
-    
+
     # The comparison logic handles different lengths
     assert dep1.version_constraint != dep2.version_constraint
 
@@ -298,18 +298,10 @@ def test_version_comparison_different_lengths():
 def test_from_dict_with_dev_dependencies_dict_format():
     """Test loading manifest with dev dependencies in dict format"""
     data = {
-        "package": {
-            "name": "test-pkg",
-            "version": "1.0.0"
-        },
-        "dev-dependencies": {
-            "test-tool": {
-                "version": "^2.0.0",
-                "source": "registry"
-            }
-        }
+        "package": {"name": "test-pkg", "version": "1.0.0"},
+        "dev-dependencies": {"test-tool": {"version": "^2.0.0", "source": "registry"}},
     }
-    
+
     manifest = PackageManifest.from_dict(data)
     assert manifest.name == "test-pkg"
     assert "test-tool" in manifest.dev_dependencies
