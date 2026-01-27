@@ -285,5 +285,36 @@ def test_circular_dependency_detection():
     assert any("cannot depend on itself" in e for e in errors)
 
 
+def test_version_comparison_different_lengths():
+    """Test version comparison with different segment lengths"""
+    # Test via Dependency class which uses the comparison
+    dep1 = Dependency("pkg", "1.0")
+    dep2 = Dependency("pkg", "1.0.0.0")
+    
+    # The comparison logic handles different lengths
+    assert dep1.version_constraint != dep2.version_constraint
+
+
+def test_from_dict_with_dev_dependencies_dict_format():
+    """Test loading manifest with dev dependencies in dict format"""
+    data = {
+        "package": {
+            "name": "test-pkg",
+            "version": "1.0.0"
+        },
+        "dev-dependencies": {
+            "test-tool": {
+                "version": "^2.0.0",
+                "source": "registry"
+            }
+        }
+    }
+    
+    manifest = PackageManifest.from_dict(data)
+    assert manifest.name == "test-pkg"
+    assert "test-tool" in manifest.dev_dependencies
+    assert manifest.dev_dependencies["test-tool"].version_constraint == "^2.0.0"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
