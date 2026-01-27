@@ -77,10 +77,14 @@ echo
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🧪 Step 5/6: Running initial tests..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-if pytest tests/ -q --tb=no > /dev/null 2>&1; then
+if pytest tests/ -q --tb=no; then
     echo "✅ All tests passing"
 else
-    echo "⚠️  Some tests failed (you can fix these later)"
+    echo "❌ Test suite failed during setup."
+    echo "Please review the pytest output above, fix the failing tests, and then re-run:"
+    echo "  make test"
+    echo "Aborting setup to avoid running with a potentially unstable development environment."
+    exit 1
 fi
 
 # Step 6: Display quick start guide
