@@ -559,3 +559,56 @@ class TestPrecedence:
         assert expr.left.op == ">"
         assert isinstance(expr.right, BinOp)
         assert expr.right.op == "<"
+
+    def test_parentheses_override_precedence(self):
+        """Test parentheses override precedence"""
+        tokens = tokenize("(1 + 2) * 3")
+        tree = parse(tokens)
+
+        expr = tree.statements[0].expr
+        assert expr.op == "*"
+        assert isinstance(expr.left, BinOp)
+        assert expr.left.op == "+"
+
+    def test_nested_parentheses(self):
+        """Test deeply nested parentheses"""
+        tokens = tokenize("((1 + 2) * (3 + 4))")
+        tree = parse(tokens)
+
+        expr = tree.statements[0].expr
+        assert isinstance(expr, BinOp)
+        assert expr.op == "*"
+
+    def test_multiple_negations(self):
+        """Test multiple unary negations"""
+        tokens = tokenize("--5")
+        tree = parse(tokens)
+
+        expr = tree.statements[0].expr
+        assert isinstance(expr, UnaryOp)
+        assert expr.op == "-"
+        assert isinstance(expr.operand, UnaryOp)
+
+    def test_comparison_operators(self):
+        """Test all comparison operators"""
+        for op in ["<", ">", "<=", ">=", "==", "!="]:
+            tokens = tokenize(f"a {op} b")
+            tree = parse(tokens)
+            expr = tree.statements[0].expr
+            assert expr.op == op
+
+    def test_logical_operators(self):
+        """Test logical operators"""
+        for op in ["&&", "||"]:
+            tokens = tokenize(f"a {op} b")
+            tree = parse(tokens)
+            expr = tree.statements[0].expr
+            assert expr.op == op
+
+    def test_arithmetic_operators(self):
+        """Test arithmetic operators"""
+        for op in ["+", "-", "*", "/", "%"]:
+            tokens = tokenize(f"a {op} b")
+            tree = parse(tokens)
+            expr = tree.statements[0].expr
+            assert expr.op == op
