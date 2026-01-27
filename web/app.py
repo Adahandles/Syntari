@@ -164,7 +164,13 @@ resource_monitor = ResourceMonitor()
 # Maximum WebSocket message size (1MB)
 MAX_MESSAGE_SIZE = 1024 * 1024
 
-# CSRF token storage (in production, use Redis or similar)
+# CSRF token storage
+# SECURITY NOTE: In-memory storage is suitable for development and single-instance deployments.
+# For production with multiple servers, use Redis or a similar distributed cache:
+#   - Redis: redis_client.setex(f"csrf:{ip_address}", 3600, token)
+#   - Memcached: memcache_client.set(f"csrf:{ip_address}", token, 3600)
+#   - Database: store in a csrf_tokens table with TTL
+# Tokens are automatically cleaned up on server restart (acceptable for development).
 csrf_tokens = {}
 
 
@@ -188,10 +194,15 @@ async def security_headers_middleware(request, handler):
     response = await handler(request)
     
     # Content Security Policy - strict policy for A+ security
+    # NOTE: 'unsafe-inline' is used for current implementation compatibility.
+    # For production, consider migrating to:
+    #   1. Nonce-based CSP: script-src 'self' 'nonce-{random}'
+    #   2. Hash-based CSP: script-src 'self' 'sha256-{hash}'
+    # This provides better XSS protection by allowing only specific inline code.
     csp_directives = [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline'",  # unsafe-inline needed for current implementation
-        "style-src 'self' 'unsafe-inline'",
+        "script-src 'self' 'unsafe-inline'",  # TODO: Migrate to nonce/hash-based CSP
+        "style-src 'self' 'unsafe-inline'",   # TODO: Migrate to nonce/hash-based CSP
         "img-src 'self' data: blob:",
         "font-src 'self'",
         "connect-src 'self' ws: wss:",  # WebSocket support
@@ -491,14 +502,19 @@ def create_app():
     cors_origin = os.environ.get("SYNTARI_CORS_ORIGIN", "http://localhost:8080")
     
     # More secure CORS configuration
+    # SECURITY NOTE: Credentials are enabled to support CSRF token validation.
+    # When using this in production:
+    #   1. Ensure CSRF validation is implemented on all state-changing endpoints
+    #   2. Use specific origin (not wildcard)
+    #   3. Review allowed methods and headers regularly
     cors = aiohttp_cors.setup(
         app,
         defaults={
             cors_origin: aiohttp_cors.ResourceOptions(
-                allow_credentials=True,  # Enable credentials for CSRF tokens
+                allow_credentials=True,  # Required for CSRF token cookies/headers
                 expose_headers="*",
                 allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
-                allow_methods=["GET", "POST", "OPTIONS"],
+                allow_methods=["GET", "POST", "OPTIONS"],  # Explicit method whitelist
             )
         },
     )
