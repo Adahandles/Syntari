@@ -1,0 +1,65 @@
+# Develop Branch Protection Ruleset
+# Protection rules for the develop branch with slightly relaxed requirements for active development
+
+name: "Develop Branch Protection"
+description: "Protection rules for the develop branch to maintain code quality while allowing flexibility"
+enforcement: active
+
+# Target branches
+target:
+  branches:
+    - "develop"
+    - "dev"
+
+# Ruleset configuration
+rules:
+  # Pull Request Requirements
+  pull_request:
+    required: true
+    dismiss_stale_reviews_on_push: true
+    require_code_owner_review: false  # More flexible for development
+    required_approving_review_count: 1
+    require_last_push_approval: false
+    require_conversation_resolution: true
+
+  # Status Check Requirements
+  required_status_checks:
+    strict: true  # Require branches to be up to date
+    checks:
+      - context: "test (ubuntu-latest, 3.12)"
+        app_id: "github-actions"
+      - context: "lint"
+        app_id: "github-actions"
+      - context: "security"
+        app_id: "github-actions"
+
+  # Commit Requirements
+  required_signatures: false  # Optional for develop
+  required_linear_history: false  # Allow merge commits in develop
+
+  # Push Restrictions
+  restrictions:
+    users: []  # Collaborators can push
+    teams: []
+    apps: ["github-actions"]
+
+  # Protection Rules
+  allow_force_pushes: false
+  allow_deletions: false
+  block_creations: false
+  required_conversation_resolution: true
+  lock_branch: false
+
+  # Bypass Settings - Allow maintainers some flexibility
+  bypass_pull_request_allowances:
+    users: []
+    teams: []
+    apps: []
+
+# Additional Settings
+settings:
+  delete_branch_on_merge: true
+  allow_squash_merge: true
+  allow_merge_commit: true
+  allow_rebase_merge: true
+  enforce_admins: false  # More flexibility for maintainers on develop

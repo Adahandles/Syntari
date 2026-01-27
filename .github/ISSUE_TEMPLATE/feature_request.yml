@@ -1,0 +1,89 @@
+name: Feature Request
+description: Suggest a new feature for Syntari
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please provide details below.
+  
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve?
+      placeholder: I'm frustrated when...
+    validations:
+      required: true
+  
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature to work?
+      placeholder: I would like...
+    validations:
+      required: true
+  
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternatives have you considered?
+      placeholder: I've also thought about...
+  
+  - type: textarea
+    id: examples
+    attributes:
+      label: Code Examples
+      description: Show how the feature would be used
+      placeholder: |
+        ```syntari
+        # Example usage
+        ```
+      render: syntari
+  
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve workflow
+        - High - Critical for my use case
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      options:
+        - Core Language
+        - Standard Library
+        - Package Manager
+        - Web REPL
+        - CLI Tools
+        - Documentation
+        - Other
+    validations:
+      required: true
+  
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be willing to implement this feature
+  
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched for similar feature requests
+          required: true
+        - label: This feature aligns with Syntari's goals
+          required: true

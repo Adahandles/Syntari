@@ -241,8 +241,8 @@ def http_get(url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 
             for key, value in headers.items():
                 req.add_header(key, value)
 
-        # Perform request
-        with urllib.request.urlopen(req, timeout=timeout) as response:
+        # Perform request (URL validated by _validate_url)
+        with urllib.request.urlopen(req, timeout=timeout) as response:  # nosec B310
             status_code = response.getcode()
             response_headers = dict(response.headers)
             body = response.read().decode("utf-8")
@@ -304,8 +304,8 @@ def http_post(
             for key, value in headers.items():
                 req.add_header(key, value)
 
-        # Perform request
-        with urllib.request.urlopen(req, timeout=timeout) as response:
+        # Perform request (URL validated by _validate_url)
+        with urllib.request.urlopen(req, timeout=timeout) as response:  # nosec B310
             status_code = response.getcode()
             response_headers = dict(response.headers)
             body = response.read().decode("utf-8")
@@ -367,8 +367,8 @@ def http_put(
             for key, value in headers.items():
                 req.add_header(key, value)
 
-        # Perform request
-        with urllib.request.urlopen(req, timeout=timeout) as response:
+        # Perform request (URL validated by _validate_url)
+        with urllib.request.urlopen(req, timeout=timeout) as response:  # nosec B310
             status_code = response.getcode()
             response_headers = dict(response.headers)
             body = response.read().decode("utf-8")
@@ -415,8 +415,8 @@ def http_delete(
             for key, value in headers.items():
                 req.add_header(key, value)
 
-        # Perform request
-        with urllib.request.urlopen(req, timeout=timeout) as response:
+        # Perform request (URL validated by _validate_url)
+        with urllib.request.urlopen(req, timeout=timeout) as response:  # nosec B310
             status_code = response.getcode()
             response_headers = dict(response.headers)
             body = response.read().decode("utf-8")

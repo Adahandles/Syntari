@@ -5,6 +5,7 @@ Provides WebSocket server for executing Syntari code in the browser
 
 import json
 import sys
+import time
 from pathlib import Path
 
 # Add parent directory to path
@@ -17,6 +18,17 @@ from src.interpreter.parser import parse, ParseError
 from src.interpreter.interpreter import Interpreter, RuntimeError as SyntariRuntimeError
 import io
 from contextlib import redirect_stdout, redirect_stderr
+
+# Import security module
+from web.security import (
+    RateLimiter, 
+    SessionManager, 
+    ResourceMonitor,
+    RateLimitConfig,
+    SessionConfig,
+    sanitize_output,
+    validate_code_safety,
+)
 
 # Import VMSecurityError for proper exception handling
 try:
@@ -44,6 +56,8 @@ class SyntariSession:
         Returns:
             dict with keys: success, output, error, result
         """
+        start_time = time.time()
+        
         try:
             # Capture stdout and stderr
             output_buffer = io.StringIO()
@@ -59,47 +73,62 @@ class SyntariSession:
                 # Interpret
                 result = self.interpreter.interpret(tree)
 
-            # Get captured output
-            stdout_value = output_buffer.getvalue()
-            stderr_value = error_buffer.getvalue()
+            # Calculate execution time
+            execution_time = time.time() - start_time
+
+            # Get captured output and sanitize
+            stdout_value = sanitize_output(output_buffer.getvalue())
+            stderr_value = sanitize_output(error_buffer.getvalue()) if error_buffer.getvalue() else None
 
             # Store in history with size limit
             self._add_to_history(
-                {"code": code, "success": True, "output": stdout_value, "result": result}
+                {
+                    "code": code, 
+                    "success": True, 
+                    "output": stdout_value, 
+                    "result": result,
+                    "execution_time": execution_time,
+                }
             )
 
             return {
                 "success": True,
                 "output": stdout_value,
-                "error": stderr_value if stderr_value else None,
+                "error": stderr_value,
                 "result": str(result) if result is not None else None,
+                "execution_time": execution_time,
             }
 
         except LexerError as e:
-            error_msg = f"Lexer error: {e}"
-            self._add_to_history({"code": code, "success": False, "error": error_msg})
-            return {"success": False, "error": error_msg, "output": None, "result": None}
+            execution_time = time.time() - start_time
+            error_msg = sanitize_output(f"Lexer error: {e}")
+            self._add_to_history({"code": code, "success": False, "error": error_msg, "execution_time": execution_time})
+            return {"success": False, "error": error_msg, "output": None, "result": None, "execution_time": execution_time}
 
         except ParseError as e:
-            error_msg = f"Parse error: {e}"
-            self._add_to_history({"code": code, "success": False, "error": error_msg})
-            return {"success": False, "error": error_msg, "output": None, "result": None}
+            execution_time = time.time() - start_time
+            error_msg = sanitize_output(f"Parse error: {e}")
+            self._add_to_history({"code": code, "success": False, "error": error_msg, "execution_time": execution_time})
+            return {"success": False, "error": error_msg, "output": None, "result": None, "execution_time": execution_time}
 
         except SyntariRuntimeError as e:
-            error_msg = f"Runtime error: {e}"
-            self._add_to_history({"code": code, "success": False, "error": error_msg})
-            return {"success": False, "error": error_msg, "output": None, "result": None}
+            execution_time = time.time() - start_time
+            error_msg = sanitize_output(f"Runtime error: {e}")
+            self._add_to_history({"code": code, "success": False, "error": error_msg, "execution_time": execution_time})
+            return {"success": False, "error": error_msg, "output": None, "result": None, "execution_time": execution_time}
 
         except VMSecurityError as e:
+            execution_time = time.time() - start_time
             # Security: Don't expose VMSecurityError details that could reveal internal limits
             error_msg = "Security limit exceeded"
-            self._add_to_history({"code": code, "success": False, "error": error_msg})
-            return {"success": False, "error": error_msg, "output": None, "result": None}
+            self._add_to_history({"code": code, "success": False, "error": error_msg, "execution_time": execution_time})
+            return {"success": False, "error": error_msg, "output": None, "result": None, "execution_time": execution_time}
 
         except Exception as e:
-            error_msg = f"Unexpected error: {e}"
-            self._add_to_history({"code": code, "success": False, "error": error_msg})
-            return {"success": False, "error": error_msg, "output": None, "result": None}
+            execution_time = time.time() - start_time
+            error_msg = sanitize_output(f"Unexpected error: {e}")
+            self._add_to_history({"code": code, "success": False, "error": error_msg, "execution_time": execution_time})
+            return {"success": False, "error": error_msg, "output": None, "result": None, "execution_time": execution_time}
 
     def _add_to_history(self, entry: dict):
         """Add entry to history with size limit"""
@@ -125,14 +154,48 @@ class SyntariSession:
 # Store sessions per WebSocket connection
 sessions = {}
 
+# Initialize security components
+rate_limiter = RateLimiter()
+session_manager = SessionManager()
+resource_monitor = ResourceMonitor()
+
 # Maximum WebSocket message size (1MB)
 MAX_MESSAGE_SIZE = 1024 * 1024
+
+
+def get_client_ip(request) -> str:
+    """Extract client IP address from request"""
+    # Check for proxy headers first
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip:
+        return real_ip
+    
+    # Fall back to peername
+    peername = request.transport.get_extra_info("peername")
+    if peername:
+        return peername[0]
+    
+    return "unknown"
 
 
 async def websocket_handler(request):
     """Handle WebSocket connections for REPL"""
     ws = web.WebSocketResponse()
     await ws.prepare(request)
+
+    # Get client IP
+    client_ip = get_client_ip(request)
+
+    # Check rate limit for initial connection
+    allowed, reason = rate_limiter.check_rate_limit(client_ip)
+    if not allowed:
+        await ws.send_json({"type": "error", "data": {"error": f"Rate limit: {reason}"}})
+        await ws.close()
+        return ws
 
     # Create new session
     session_id = id(ws)
@@ -150,6 +213,42 @@ async def websocket_handler(request):
 
                 try:
                     data = json.loads(msg.data)
+                    command = data.get("command")
+
+                    if command == "execute":
+                        code = data.get("code", "")
+                        
+                        # Check rate limit
+                        allowed, reason = rate_limiter.check_rate_limit(client_ip)
+                        if not allowed:
+                            await ws.send_json({"type": "error", "data": {"error": f"Rate limit: {reason}"}})
+                            continue
+                        
+                        # Check code length
+                        allowed, reason = rate_limiter.check_code_length(code, client_ip)
+                        if not allowed:
+                            await ws.send_json({"type": "error", "data": {"error": reason}})
+                            continue
+                        
+                        # Validate code safety
+                        safe, reason = validate_code_safety(code)
+                        if not safe:
+                            await ws.send_json({"type": "error", "data": {"error": reason}})
+                            continue
+                        
+                        # Execute code
+                        result = sessions[session_id].execute(code)
+                        
+                        # Record metrics
+                        execution_time = result.get("execution_time", 0)
+                        rate_limiter.record_execution_time(
+                            client_ip, 
+                            execution_time, 
+                            len(code), 
+                            result.get("success", False)
+                        )
+                        resource_monitor.record_execution(client_ip, execution_time)
+                        
                     command = data.get("command")
 
                     if command == "execute":
@@ -203,9 +302,62 @@ async def index_handler(request):
         return web.Response(text="Web REPL index.html not found", status=404)
 
 
+async def admin_handler(request):
+    """Serve the admin dashboard"""
+    html_file = Path(__file__).parent / "admin.html"
+    if html_file.exists():
+        return web.FileResponse(html_file)
+    else:
+        return web.Response(text="Admin dashboard not found", status=404)
+
+
 async def health_handler(request):
     """Health check endpoint"""
-    return web.json_response({"status": "healthy", "version": "0.4.0"})
+    return web.json_response({
+        "status": "healthy", 
+        "version": "0.4.0",
+        "security": {
+            "rate_limiting": "enabled",
+            "session_management": "enabled",
+            "resource_monitoring": "enabled",
+        }
+    })
+
+
+async def stats_handler(request):
+    """Statistics endpoint for monitoring"""
+    # Get client IP
+    client_ip = get_client_ip(request)
+    
+    # Simple authentication check (you should use proper auth in production)
+    auth_token = request.headers.get("Authorization")
+    if not auth_token or auth_token != "Bearer admin-token-change-me":
+        return web.json_response({"error": "Unauthorized"}, status=401)
+    
+    # Gather statistics
+    stats = {
+        "rate_limiter": rate_limiter.get_all_stats(),
+        "sessions": session_manager.get_stats(),
+        "active_connections": len(sessions),
+        "resource_metrics": {
+            ip: resource_monitor.get_metrics(ip, window=300)
+            for ip in set(c.ip_address for c in rate_limiter.clients.values())
+        },
+    }
+    
+    return web.json_response(stats)
+
+
+async def client_stats_handler(request):
+    """Get statistics for the current client"""
+    client_ip = get_client_ip(request)
+    
+    stats = {
+        "rate_limit": rate_limiter.get_client_stats(client_ip),
+        "resources": resource_monitor.get_metrics(client_ip, window=300),
+    }
+    
+    return web.json_response(stats)
 
 
 def create_app():
@@ -214,7 +366,10 @@ def create_app():
 
     # Add routes
     app.router.add_get("/", index_handler)
+    app.router.add_get("/admin", admin_handler)
     app.router.add_get("/health", health_handler)
+    app.router.add_get("/stats", stats_handler)
+    app.router.add_get("/client-stats", client_stats_handler)
     app.router.add_get("/ws", websocket_handler)
 
     # Serve static files

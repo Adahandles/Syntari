@@ -1,0 +1,6 @@
+// Simple Hello World package
+fn main() {
+    print("Hello from package!")
+}
+
+main()

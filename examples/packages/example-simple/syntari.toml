@@ -1,0 +1,16 @@
+[package]
+name = "hello-world"
+version = "1.0.0"
+description = "A simple Hello World package"
+authors = ["Syntari Developer"]
+license = "MIT"
+
+[dependencies]
+# No dependencies
+
+[dev-dependencies]
+# No dev dependencies
+
+[build]
+entry_point = "main.syn"
+compile_to_bytecode = false

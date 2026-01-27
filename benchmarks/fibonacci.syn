@@ -1,0 +1,10 @@
+// Benchmark: Fibonacci (recursive)
+fn fib(n) {
+    if (n <= 1) {
+        return n
+    }
+    return fib(n - 1) + fib(n - 2)
+}
+
+let result = fib(20)
+print("Fibonacci(20) =", result)

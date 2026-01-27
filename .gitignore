@@ -45,6 +45,8 @@ coverage.xml
 
 # Environments
 .env
+.env.local
+.env.*.local
 .venv
 env/
 venv/
@@ -57,14 +59,71 @@ venv.bak/
 .idea/
 *.swp
 *.swo
+*.swn
 *~
 .DS_Store
+.DS_Store
+.project
+.pydevproject
+.settings/
 
 # Syntari specific
 *.sbc
 *.syn.bak
+*.syn~
 
 # Temporary files
 tmp/
 temp/
 *.tmp
+*.bak
+*.orig
+
+# Security sensitive files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+secrets/
+credentials/
+.secrets/
+config.local.*
+security-report.json
+security-report.txt
+security-scan-report.json
+bandit-report.json
+safety-report.json
+pip-audit.json
+pip-audit-report.json
+semgrep-report.json
+sbom-*.json
+licenses.json
+licenses.md
+dependency-tree.json
+pip-packages.json
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# OS specific
+Thumbs.db
+Desktop.ini
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Package manager
+.npm/
+node_modules/
+package-lock.json
+yarn.lock

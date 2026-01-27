@@ -1,0 +1,86 @@
+# GitHub Repository Ruleset for Main Branch Protection
+# This file serves as documentation for the main branch protection rules
+# Note: GitHub does not directly support importing rulesets from YAML files in the repository
+# This file documents the recommended configuration that should be applied via GitHub UI
+
+name: "Main Branch Protection"
+description: "Comprehensive protection rules for the main branch to ensure code quality and security"
+enforcement: active
+
+# Target branches
+target:
+  branches:
+    - "main"
+    - "master"  # fallback if main is renamed
+
+# Ruleset configuration
+rules:
+  # Pull Request Requirements
+  pull_request:
+    required: true
+    dismiss_stale_reviews_on_push: true
+    require_code_owner_review: true
+    required_approving_review_count: 1
+    require_last_push_approval: true
+    require_conversation_resolution: true
+
+  # Status Check Requirements
+  required_status_checks:
+    strict: true  # Require branches to be up to date
+    checks:
+      - context: "test (ubuntu-latest, 3.12)"
+        app_id: "github-actions"
+      - context: "lint"
+        app_id: "github-actions"
+      - context: "security"
+        app_id: "github-actions"
+      - context: "build"
+        app_id: "github-actions"
+      - context: "CodeQL"
+        app_id: "github-actions"
+      - context: "Security Audit / security-scan"
+        app_id: "github-actions"
+
+  # Commit Requirements
+  required_signatures: true  # Require signed commits
+  required_linear_history: true  # No merge commits
+
+  # Push Restrictions
+  restrictions:
+    users: []  # No direct user pushes
+    teams: []  # No direct team pushes
+    apps: ["github-actions"]  # Only GitHub Actions can push (for automated updates)
+
+  # Protection Rules
+  allow_force_pushes: false
+  allow_deletions: false
+  block_creations: false  # Allow branch creation for initial setup
+  required_conversation_resolution: true
+  lock_branch: false  # Set to true for production freeze
+
+  # Bypass Settings
+  bypass_pull_request_allowances:
+    users: []  # No bypass for users
+    teams: []  # No bypass for teams
+    apps: []   # No bypass for apps
+
+# Additional Settings
+settings:
+  # Require deployments to succeed before merging
+  required_deployments:
+    environments: []  # Add production environments if applicable
+
+  # Automatically delete head branches after merge
+  delete_branch_on_merge: true
+
+  # Allow squash merging
+  allow_squash_merge: true
+
+  # Allow merge commits
+  allow_merge_commit: false  # Disabled to enforce linear history
+
+  # Allow rebase merging
+  allow_rebase_merge: true
+
+  # Require status checks for administrators
+  enforce_admins: true

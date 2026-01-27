@@ -1,0 +1,26 @@
+// Benchmark: Array-like operations (simulated with variables)
+fn sum_range(start, end) {
+    let sum = 0
+    let i = start
+    while (i <= end) {
+        sum = sum + i
+        i = i + 1
+    }
+    return sum
+}
+
+fn multiply_range(start, end) {
+    let product = 1
+    let i = start
+    while (i <= end) {
+        product = product * i
+        i = i + 1
+    }
+    return product
+}
+
+let sum = sum_range(1, 1000)
+let product = multiply_range(1, 10)
+
+print("Sum 1-1000:", sum)
+print("Product 1-10:", product)

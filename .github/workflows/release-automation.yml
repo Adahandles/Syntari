@@ -1,0 +1,128 @@
+name: Release Automation with Notes
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v0.5.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  generate-release-notes:
+    name: Generate Release Notes
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        fetch-depth: 0
+
+    - name: Generate release notes
+      id: release_notes
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      with:
+        script: |
+          const tag = context.payload.release?.tag_name || context.payload.inputs?.tag;
+          
+          // Get all commits since last release
+          const { data: tags } = await github.rest.repos.listTags({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100
+          });
+          
+          const currentTagIndex = tags.findIndex(t => t.name === tag);
+          const previousTag = tags[currentTagIndex + 1];
+          
+          let commits;
+          if (previousTag) {
+            const { data: comparison } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: previousTag.name,
+              head: tag
+            });
+            commits = comparison.commits;
+          } else {
+            const { data: allCommits } = await github.rest.repos.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+            commits = allCommits;
+          }
+          
+          // Categorize commits by conventional commit type
+          const categories = {
+            'feat': { title: '✨ Features', items: [] },
+            'fix': { title: '🐛 Bug Fixes', items: [] },
+            'security': { title: '🔒 Security', items: [] },
+            'perf': { title: '⚡ Performance', items: [] },
+            'refactor': { title: '♻️ Refactoring', items: [] },
+            'docs': { title: '📚 Documentation', items: [] },
+            'test': { title: '✅ Tests', items: [] },
+            'chore': { title: '🔧 Chore', items: [] },
+            'other': { title: '📦 Other Changes', items: [] }
+          };
+          
+          for (const commit of commits) {
+            const message = commit.commit.message.split('\n')[0];
+            const match = message.match(/^(\w+)(?:\(.*?\))?:\s*(.+)/);
+            
+            if (match) {
+              const [, type, description] = match;
+              const category = categories[type] || categories.other;
+              category.items.push(`- ${description} (${commit.sha.substring(0, 7)})`);
+            } else {
+              categories.other.items.push(`- ${message} (${commit.sha.substring(0, 7)})`);
+            }
+          }
+          
+          // Build release notes
+          let releaseNotes = `## Release ${tag}\n\n`;
+          
+          for (const [type, category] of Object.entries(categories)) {
+            if (category.items.length > 0) {
+              releaseNotes += `### ${category.title}\n\n`;
+              releaseNotes += category.items.join('\n') + '\n\n';
+            }
+          }
+          
+          // Add contributors
+          const contributors = [...new Set(commits.map(c => c.author?.login).filter(Boolean))];
+          if (contributors.length > 0) {
+            releaseNotes += `### 👥 Contributors\n\n`;
+            releaseNotes += contributors.map(c => `- @${c}`).join('\n') + '\n\n';
+          }
+          
+          // Add statistics
+          releaseNotes += `### 📊 Statistics\n\n`;
+          releaseNotes += `- Commits: ${commits.length}\n`;
+          releaseNotes += `- Contributors: ${contributors.length}\n`;
+          releaseNotes += `- Previous release: ${previousTag?.name || 'Initial release'}\n\n`;
+          
+          return releaseNotes;
+
+    - name: Update release with generated notes
+      if: github.event_name == 'release'
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      with:
+        script: |
+          const releaseNotes = ${{ steps.release_notes.outputs.result }};
+          
+          await github.rest.repos.updateRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: context.payload.release.id,
+            body: releaseNotes
+          });
+          
+          console.log('✅ Release notes updated');

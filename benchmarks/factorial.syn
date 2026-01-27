@@ -1,0 +1,13 @@
+// Benchmark: Factorial (iterative)
+fn factorial(n) {
+    let result = 1
+    let i = 2
+    while (i <= n) {
+        result = result * i
+        i = i + 1
+    }
+    return result
+}
+
+let result = factorial(20)
+print("Factorial(20) =", result)

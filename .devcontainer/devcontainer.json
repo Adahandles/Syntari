@@ -1,0 +1,39 @@
+{
+  "name": "Syntari Development",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    }
+  },
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "GitHub.copilot",
+        "GitHub.vscode-pull-request-github",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.formatting.provider": "black",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  
+  "postCreateCommand": "pip install -e .[web] && pre-commit install || echo 'Setup failed - check logs'",
+  
+  "forwardPorts": [8000],
+  
+  "remoteUser": "vscode"
+}
