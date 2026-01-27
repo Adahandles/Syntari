@@ -5,6 +5,7 @@ Comprehensive tests for src/pkg/cli.py
 import pytest
 import tempfile
 import shutil
+import os
 from pathlib import Path
 from unittest.mock import patch, MagicMock, Mock
 import sys
@@ -30,12 +31,10 @@ def temp_dir():
     original_cwd = Path.cwd()
     try:
         # Change to temp directory
-        import os
         os.chdir(temp)
         yield temp
     finally:
         # Restore original directory
-        import os
         os.chdir(original_cwd)
         # Cleanup
         if temp.exists():
