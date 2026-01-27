@@ -3,6 +3,7 @@
 Bytecode compiler for the Syntari language.
 """
 
+
 class BytecodeCompiler:
     def __init__(self):
         self.bytecode = []
@@ -13,7 +14,7 @@ class BytecodeCompiler:
         # Implementation details go here.
 
     def save(self, filename):
-        with open(filename, 'wb') as f:
+        with open(filename, "wb") as f:
             f.write(self.bytecode)
 
     def clear(self):
@@ -21,4 +22,3 @@ class BytecodeCompiler:
         print("Cleared bytecode.")
 
     # Additional methods...
-    
