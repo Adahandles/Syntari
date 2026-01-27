@@ -4,7 +4,6 @@ import pytest
 from src.pkg.manifest import PackageManifest, Dependency
 from src.pkg.resolver import (
     DependencyResolver,
-    ResolverError,
     ResolvedPackage,
     print_dependency_tree,
 )
