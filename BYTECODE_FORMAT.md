@@ -19,9 +19,18 @@ Syntari compiles source files (.syn) into bytecode (.sbc) for execution by the S
 ### Constants Pool
 - Count: 32-bit unsigned integer (little-endian)
 - For each constant:
-  - Length: 32-bit unsigned integer (string length in bytes)
-  - Data: UTF-8 encoded string representation of the constant
-  - Constants are parsed as: boolean (True/False), None, integer, float, or string
+  - Length: 32-bit unsigned integer (constant data length in bytes)
+  - Data:
+    - First byte(s): **type tag**
+      - `S` : string constant
+      - `I` : integer constant
+      - `F` : float constant
+      - `B0`: boolean `False`
+      - `B1`: boolean `True`
+      - `N` : `None` constant
+    - Remaining bytes: type-specific payload (e.g., UTF-8 string bytes for `S`)
+  - After decoding tags, constants are interpreted as: boolean (True/False), None, integer, float, or string
+  - Type tags ensure string "True" is distinct from boolean True, preventing ambiguity
 
 ### Instruction Count
 - Count: 32-bit unsigned integer (number of instructions in source)
