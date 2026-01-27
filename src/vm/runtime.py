@@ -45,6 +45,21 @@ OP = {
     0xFF: "HALT",
 }
 
+# Public API exports
+__all__ = [
+    "MAGIC",
+    "MAX_STACK_SIZE",
+    "MAX_INSTRUCTIONS",
+    "MAX_VARS",
+    "MAX_STRING_LENGTH",
+    "MAX_CALL_DEPTH",
+    "OP",
+    "VMSecurityError",
+    "CallFrame",
+    "SyntariVM",
+    "run_vm",
+]
+
 
 class VMSecurityError(Exception):
     """Raised when VM security limits are exceeded"""
@@ -358,7 +373,9 @@ class SyntariVM:
                         )
 
                     # For now, user-defined functions are not implemented
-                    raise NotImplementedError(f"User-defined function calls not yet implemented: {func_name}")
+                    raise NotImplementedError(
+                        f"User-defined function calls not yet implemented: {func_name}"
+                    )
 
             elif op == 0x31:  # RETURN
                 if not self.call_stack:
