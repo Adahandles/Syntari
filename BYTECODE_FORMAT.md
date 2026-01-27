@@ -19,18 +19,21 @@ Syntari compiles source files (.syn) into bytecode (.sbc) for execution by the S
 ### Constants Pool
 - Count: 32-bit unsigned integer (little-endian)
 - For each constant:
-  - Length: 32-bit unsigned integer (constant data length in bytes)
+  - Length: 32-bit unsigned integer (constant data length in bytes, **including type tag bytes**)
   - Data:
-    - First byte(s): **type tag**
-      - `S` : string constant
-      - `I` : integer constant
-      - `F` : float constant
-      - `B0`: boolean `False`
-      - `B1`: boolean `True`
-      - `N` : `None` constant
-    - Remaining bytes: type-specific payload (e.g., UTF-8 string bytes for `S`)
-  - After decoding tags, constants are interpreted as: boolean (True/False), None, integer, float, or string
-  - Type tags ensure string "True" is distinct from boolean True, preventing ambiguity
+    - First byte(s): **type tag**, encoded as ASCII:
+      - `S`   : string constant
+      - `I`   : integer constant
+      - `F`   : float constant
+      - `B0`  : boolean `False` (`B` followed by `0`)
+      - `B1`  : boolean `True`  (`B` followed by `1`)
+      - `N`   : `None` constant
+    - Remaining bytes (if any): type-specific payload
+      - For tagged strings (`S`), this is the raw UTF-8-encoded string bytes.
+      - For simple booleans (`B0`/`B1`) and `None` (`N`), there is typically **no payload**; the tag alone identifies both type (and value, for booleans).
+      - Other scalar types (`I`, `F`) use an implementation-defined binary representation; the VM must interpret the payload according to the tag.
+  - After decoding tags, constants are interpreted as: boolean (`True`/`False`), `None`, integer, float, or string.
+  - This explicit type-tag scheme ensures, for example, that the string `"True"` (`S` + UTF-8 `"True"`) is distinct from the boolean `True` (`B1`), eliminating earlier ambiguity in the constants pool encoding.
 
 ### Instruction Count
 - Count: 32-bit unsigned integer (number of instructions in source)
