@@ -13,6 +13,7 @@ Commands:
   syntari pkg cache --clear        - Clear package cache
 """
 
+import os
 import sys
 import argparse
 from pathlib import Path
@@ -270,8 +271,18 @@ def cmd_publish(args):
 
         print(f"Publishing {manifest.name}@{manifest.version}...")
 
-        # TODO: Get API key from config or environment
-        api_key = "stub-api-key"
+        # Get API key from environment variable
+        api_key = os.environ.get("SYNTARI_REGISTRY_API_KEY")
+        if not api_key:
+            print(
+                "Error: SYNTARI_REGISTRY_API_KEY environment variable not set",
+                file=sys.stderr,
+            )
+            print(
+                "Set it with: export SYNTARI_REGISTRY_API_KEY=your_api_key",
+                file=sys.stderr,
+            )
+            return 1
 
         if registry.publish_package(manifest_path, Path.cwd(), api_key):
             print(f"✓ Published {manifest.name}@{manifest.version}")
