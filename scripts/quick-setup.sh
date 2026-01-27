@@ -34,10 +34,10 @@ echo "📋 Step 1/6: Checking Python version..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
 REQUIRED_VERSION="3.8"
-if [[ "$(printf '%s\n' "$REQUIRED_VERSION" "$PYTHON_VERSION" | sort -V | head -n1)" != "$REQUIRED_VERSION" ]]; then
-    echo "❌ Python 3.8+ required (found: $PYTHON_VERSION)"
+python3 -c "import sys; sys.exit(0 if sys.version_info >= tuple(map(int, '$REQUIRED_VERSION'.split('.'))) else 1)" || {
+    echo "❌ Python ${REQUIRED_VERSION}+ required (found: $PYTHON_VERSION)"
     exit 1
-fi
+}
 echo "✅ Python $PYTHON_VERSION detected"
 
 # Step 2: Setup virtual environment
