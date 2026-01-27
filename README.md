@@ -1,5 +1,9 @@
 # Syntari Programming Language
 
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Adahandles/Syntari/badge)](https://securityscorecards.dev/viewer/?uri=github.com/Adahandles/Syntari)
+[![Security](https://img.shields.io/badge/security-SLSA%20Level%203-brightgreen)](https://slsa.dev/)
+[![Tests](https://img.shields.io/badge/tests-473%20passing-brightgreen)](https://github.com/Adahandles/Syntari/actions)
+
 **Version:** 0.4.0 ✅ Production Ready  
 **Owner:** DeuOS, LLC  
 **License:** [Commercial License](Syntari_Commercial_License_DeuOS.md)

@@ -6,24 +6,25 @@
 
 <!-- Mark the relevant option with an 'x' -->
 
-- [ ] Bug fix (non-breaking change that fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] Documentation update
-- [ ] Performance improvement
-- [ ] Code refactoring
-- [ ] Security fix
-- [ ] Dependency update
+- [ ] 🐛 Bug fix (non-breaking change that fixes an issue)
+- [ ] ✨ New feature (non-breaking change that adds functionality)
+- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] 📚 Documentation update
+- [ ] ♻️ Refactoring (no functional changes)
+- [ ] ⚡ Performance improvement
+- [ ] ✅ Test update
+- [ ] 🔧 Build/CI changes
 
 ## Related Issues
 
 <!-- Link to related issues using #issue_number -->
 
 Fixes #
+Relates to #
 
 ## Changes Made
 
-<!-- Provide a detailed list of changes made in this PR -->
+<!-- Describe the changes in detail -->
 
 - 
 - 
@@ -31,94 +32,67 @@ Fixes #
 
 ## Testing
 
-<!-- Describe the testing you've done -->
-
-- [ ] All existing tests pass (`make test`)
-- [ ] New tests added for new functionality
-- [ ] Manual testing completed
-- [ ] Tested on multiple Python versions (if applicable)
+<!-- Describe the tests you ran and how to reproduce them -->
 
 ### Test Coverage
 
-<!-- Paste relevant test output or coverage information -->
+- [ ] Unit tests added/updated
+- [ ] Integration tests added/updated
+- [ ] Manual testing performed
 
+### Test Commands
+
+```bash
+# Commands used to test
+pytest tests/...
 ```
-# Test output here
-```
 
-## Code Quality
+## Screenshots/Output
 
-<!-- Confirm you've run these checks -->
+<!-- If applicable, add screenshots or console output -->
 
-- [ ] Code formatted with Black (`make format`)
-- [ ] Linting passes (`make lint`)
-- [ ] Type checking passes (`mypy src/`)
-- [ ] No security issues found (`bandit -r src/`)
+## Checklist
 
-## Documentation
+<!-- Mark completed items with an 'x' -->
 
-<!-- Confirm documentation updates -->
+### Code Quality
+- [ ] Code follows the project's style guidelines (Black, flake8)
+- [ ] Self-review of code performed
+- [ ] Code is commented where necessary
+- [ ] No new warnings generated
 
-- [ ] Code changes are documented with docstrings
-- [ ] README.md updated (if needed)
+### Testing
+- [ ] New tests added for new features/bug fixes
+- [ ] All tests pass locally
+- [ ] Test coverage maintained or improved
+
+### Documentation
+- [ ] Documentation updated (if applicable)
 - [ ] CHANGELOG.md updated (if applicable)
-- [ ] Comments added for complex logic
+- [ ] README.md updated (if applicable)
 
-## Security Considerations
+### Security
+- [ ] No secrets or sensitive data committed
+- [ ] Security implications considered
+- [ ] Dependencies reviewed for vulnerabilities
 
-<!-- Answer these security questions -->
-
-- [ ] No sensitive data (credentials, keys, tokens) committed
-- [ ] Input validation added for user-facing features
-- [ ] Error messages don't expose sensitive information
-- [ ] Dependencies reviewed for security vulnerabilities
-
-### Security Impact
-
-<!-- Describe any security implications of your changes -->
-
-None / Low / Medium / High
-
-Details:
+### Review
+- [ ] PR title follows conventional commits format (e.g., `feat:`, `fix:`, `docs:`)
+- [ ] PR is ready for review
+- [ ] Labels applied appropriately
 
 ## Performance Impact
 
 <!-- Describe any performance implications -->
 
-- [ ] No significant performance impact
-- [ ] Performance benchmarks run (paste results if applicable)
+- [ ] No performance impact
+- [ ] Performance improved
+- [ ] Performance degraded (justified below)
 
 ## Breaking Changes
 
 <!-- If this is a breaking change, describe the impact and migration path -->
 
-N/A
-
-## Screenshots (if applicable)
-
-<!-- Add screenshots for UI changes or visual updates -->
-
-## Checklist
-
-<!-- Final checklist before submitting -->
-
-- [ ] My code follows the project's style guidelines
-- [ ] I have reviewed my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published
-
 ## Additional Notes
 
-<!-- Any additional information that reviewers should know -->
-
----
-
-**For Reviewers:**
-- Code review checklist completed
-- Security review completed
-- Documentation review completed
-- Tests adequately cover changes
+<!-- Any additional information for reviewers -->
