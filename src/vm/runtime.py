@@ -280,8 +280,6 @@ class SyntariVM:
                 idx = self._fetch_u32()
                 if idx >= len(self.consts):
                     raise RuntimeError(f"Invalid constant index: {idx}")
-                if idx >= len(self.consts):
-                    raise RuntimeError(f"Invalid constant index: {idx}")
                 self._push(self.consts[idx])
 
             # STORE name
