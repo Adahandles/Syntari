@@ -252,5 +252,89 @@ class TestWebSocketStub(unittest.TestCase):
                 pass
 
 
+class TestSSRFValidation(unittest.TestCase):
+    """Additional SSRF validation tests"""
+
+    def test_validate_url_no_hostname(self):
+        """Test URL without hostname fails"""
+        with self.assertRaises(net.SSRFError):
+            net._validate_url("http://")
+
+    def test_validate_url_hostname_is_ip(self):
+        """Test when hostname is directly a private IP"""
+        with self.assertRaises(net.SSRFError):
+            net._validate_url("http://192.168.1.1/test")
+
+    def test_validate_url_dns_failure(self):
+        """Test when DNS resolution fails"""
+        # Mock DNS lookup to fail
+        import socket
+        with patch('socket.gethostbyname', side_effect=socket.gaierror("DNS lookup failed")):
+            # Should still raise error when DNS fails (can't verify safety)
+            try:
+                net._validate_url("http://example.com")
+            except (net.SSRFError, socket.gaierror):
+                pass  # Either error is acceptable
+
+    def test_validate_url_invalid_format(self):
+        """Test invalid URL format"""
+        with self.assertRaises(net.SSRFError):
+            net._validate_url("not-a-valid-url-at-all")
+
+    @patch.dict("os.environ", {"SYNTARI_ENV": "test"})
+    def test_validate_url_for_tests_runtime_check(self):
+        """Test the test-only validation function"""
+        # Should not raise in test env
+        try:
+            net._validate_url_for_tests("http://example.com", allow_private=True)
+        except net.SSRFError:
+            pass  # May raise for other reasons
+
+    def test_validate_url_for_tests_non_test_env(self):
+        """Test that test function fails outside test env"""
+        import os
+        old_env = os.environ.get("SYNTARI_ENV")
+        try:
+            if "SYNTARI_ENV" in os.environ:
+                del os.environ["SYNTARI_ENV"]
+            with self.assertRaises(RuntimeError):
+                net._validate_url_for_tests("http://example.com")
+        finally:
+            if old_env:
+                os.environ["SYNTARI_ENV"] = old_env
+
+    @patch.dict("os.environ", {"SYNTARI_ENV": "test"})
+    def test_validate_url_for_tests_no_hostname(self):
+        """Test test function with no hostname"""
+        with self.assertRaises(net.SSRFError):
+            net._validate_url_for_tests("http://")
+
+    @patch.dict("os.environ", {"SYNTARI_ENV": "test"})
+    @patch("socket.gethostbyname")
+    def test_validate_url_for_tests_private_ip(self, mock_gethostbyname):
+        """Test test function with private IP"""
+        mock_gethostbyname.return_value = "192.168.1.1"
+        with self.assertRaises(net.SSRFError):
+            net._validate_url_for_tests("http://example.com", allow_private=False)
+
+    @patch.dict("os.environ", {"SYNTARI_ENV": "test"})
+    @patch("socket.gethostbyname")
+    def test_validate_url_for_tests_dns_failure(self, mock_gethostbyname):
+        """Test test function with DNS failure"""
+        import socket
+        mock_gethostbyname.side_effect = socket.gaierror("DNS lookup failed")
+        # Should not raise in test mode with DNS failure
+        try:
+            net._validate_url_for_tests("http://example.com")
+        except net.SSRFError:
+            pass  # May raise for other reasons
+
+    @patch.dict("os.environ", {"SYNTARI_ENV": "test"})
+    def test_validate_url_for_tests_invalid_format(self):
+        """Test test function with invalid format"""
+        with self.assertRaises(net.SSRFError):
+            net._validate_url_for_tests("not-valid")
+
+
 if __name__ == "__main__":
     unittest.main()

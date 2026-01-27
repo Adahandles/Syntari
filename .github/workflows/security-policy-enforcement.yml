@@ -184,6 +184,7 @@ jobs:
 
     - name: Upload code security reports
       uses: actions/upload-artifact@65462800fd760344b1a7b458a1426d2aa275f82a # v4.4.0
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: code-security-reports
@@ -229,6 +230,7 @@ jobs:
 
     - name: Upload license report
       uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.6
+      uses: actions/upload-artifact@v4
       with:
         name: license-report
         path: |
