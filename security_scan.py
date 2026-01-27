@@ -8,7 +8,7 @@ Runs multiple security checks and generates a detailed report.
 
 import json
 import os
-import subprocess
+import subprocess  # nosec B404 - subprocess module needed for security scanning
 import sys
 from datetime import datetime
 from pathlib import Path

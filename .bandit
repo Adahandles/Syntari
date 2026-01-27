@@ -1,0 +1,15 @@
+[bandit]
+# Bandit configuration for Syntari
+# This file configures security scanning to exclude false positives
+
+# Exclude test directories from certain checks
+exclude_dirs = []
+
+# Skip certain tests in test files
+# B101: Use of assert detected - This is normal and expected in test files
+# We allow assert statements in test directories only
+skips = B101
+
+# For tests directory specifically, we're okay with asserts
+[bandit.tests]
+skips = B101

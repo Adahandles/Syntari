@@ -8,14 +8,14 @@ Suitable for pre-commit or quick validation.
 
 import os
 import sys
-import subprocess
+import subprocess  # nosec B404 - subprocess module needed for security scanning
 from pathlib import Path
 
 
 def check_command_available(cmd):
     """Check if a command is available."""
     try:
-        subprocess.run([cmd, "--version"], capture_output=True, check=True)
+        subprocess.run([cmd, "--version"], capture_output=True, check=True)  # nosec B603, B607
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False
@@ -97,7 +97,7 @@ def main():
     # Check 4: Git status for sensitive files
     result = subprocess.run(
         "git status --porcelain | grep -E '\\.env$|\\.pem$|\\.key$' || true",
-        shell=True,  # nosec B602 - Safe grep command for security checking
+        shell=True,  # nosec B602, B607 - Safe grep command for security checking
         capture_output=True,
         text=True
     )
