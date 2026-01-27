@@ -31,7 +31,7 @@ Syntari compiles source files (.syn) into bytecode (.sbc) for execution by the S
     - Remaining bytes (if any): type-specific payload
       - For tagged strings (`S`), this is the raw UTF-8-encoded string bytes.
       - For simple booleans (`B0`/`B1`) and `None` (`N`), there is typically **no payload**; the tag alone identifies both type (and value, for booleans).
-      - Other scalar types (`I`, `F`) use an implementation-defined binary representation; the VM must interpret the payload according to the tag.
+      - Integer constants (`I`) are encoded as the UTF-8/ASCII decimal string representation of the value (e.g., `I42`); float constants (`F`) are encoded as the UTF-8/ASCII decimal string representation of the value (e.g., `F3.14`).
   - After decoding tags, constants are interpreted as: boolean (`True`/`False`), `None`, integer, float, or string.
   - This explicit type-tag scheme ensures, for example, that the string `"True"` (`S` + UTF-8 `"True"`) is distinct from the boolean `True` (`B1`), eliminating earlier ambiguity in the constants pool encoding.
 
