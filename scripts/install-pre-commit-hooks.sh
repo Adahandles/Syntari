@@ -17,7 +17,7 @@ cd "$PROJECT_ROOT"
 # Check if pre-commit is installed
 if ! command -v pre-commit &> /dev/null; then
     echo "📦 Installing pre-commit..."
-    pip install pre-commit
+    pip install 'pre-commit>=3.0.0'
 else
     echo "✅ pre-commit already installed"
 fi
