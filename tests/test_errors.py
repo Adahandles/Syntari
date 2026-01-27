@@ -303,7 +303,7 @@ class TestErrorHandler:
         handler = ErrorHandler()
         handler.handle(SyntariError("Error 1"))
         handler.handle(SyntariError("Warning 1", severity=ErrorSeverity.WARNING))
-        
+
         summary = handler.get_error_summary()
         assert "1 error(s)" in summary
         assert "1 warning(s)" in summary
@@ -311,18 +311,19 @@ class TestErrorHandler:
     def test_handle_with_logger(self):
         """Test error handler with logger"""
         from unittest.mock import Mock
+
         logger = Mock()
         handler = ErrorHandler(logger=logger)
-        
+
         # Handle error
         handler.handle(SyntariError("Test error"))
         logger.error.assert_called_once()
-        
+
         # Handle warning
         logger.reset_mock()
         handler.handle(SyntariError("Test warning", severity=ErrorSeverity.WARNING))
         logger.warning.assert_called_once()
-        
+
         # Handle critical
         logger.reset_mock()
         with pytest.raises(SyntariError):

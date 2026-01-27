@@ -2,7 +2,11 @@
 
 import pytest
 from src.pkg.manifest import PackageManifest, Dependency
-from src.pkg.resolver import DependencyResolver, ResolverError, ResolvedPackage, print_dependency_tree
+from src.pkg.resolver import (
+    DependencyResolver,
+    ResolvedPackage,
+    print_dependency_tree,
+)
 
 
 def test_resolve_no_dependencies():
@@ -42,12 +46,12 @@ def test_resolve_with_dev_dependencies():
     )
 
     resolver = DependencyResolver()
-    
+
     # Without dev dependencies
     resolved = resolver.resolve(manifest, include_dev=False)
     assert len(resolved) == 1
     assert resolved[0].name == "dep1"
-    
+
     # With dev dependencies
     resolved_with_dev = resolver.resolve(manifest, include_dev=True)
     assert len(resolved_with_dev) == 2
@@ -142,7 +146,7 @@ def test_resolved_package_equality():
     pkg1 = ResolvedPackage("test", "1.0.0", {})
     pkg2 = ResolvedPackage("test", "1.0.0", {})
     pkg3 = ResolvedPackage("test", "2.0.0", {})
-    
+
     assert pkg1 == pkg2
     assert pkg1 != pkg3
 
@@ -151,9 +155,9 @@ def test_resolved_package_hash():
     """Test ResolvedPackage hashing"""
     pkg1 = ResolvedPackage("test", "1.0.0", {})
     pkg2 = ResolvedPackage("test", "1.0.0", {})
-    
+
     assert hash(pkg1) == hash(pkg2)
-    
+
     # Can be used in sets
     pkg_set = {pkg1, pkg2}
     assert len(pkg_set) == 1
@@ -164,18 +168,14 @@ def test_print_dependency_tree():
     tree = {
         "dep1": {
             "version": "1.0.0",
-            "dependencies": {
-                "subdep": {
-                    "version": "2.0.0",
-                    "dependencies": {}
-                }
-            }
+            "dependencies": {"subdep": {"version": "2.0.0", "dependencies": {}}},
         }
     }
-    
+
     # Should not raise exception
     import io
     import sys
+
     old_stdout = sys.stdout
     sys.stdout = io.StringIO()
     try:
@@ -193,7 +193,7 @@ def test_circular_dependency_detection():
     # This is tricky since we use mocks, but we can test the visited check
     resolver = DependencyResolver()
     resolver.visited.add("circular-pkg")
-    
+
     # Attempting to resolve a visited but unresolved package should error
     # Note: In real scenario this would happen through recursive calls
     # For now we just verify the basic mechanism
@@ -206,19 +206,19 @@ def test_resolver_state_reset():
         version="1.0.0",
         dependencies={"dep1": Dependency("dep1", "1.0.0")},
     )
-    
+
     manifest2 = PackageManifest(
         name="pkg2",
         version="1.0.0",
         dependencies={"dep2": Dependency("dep2", "1.0.0")},
     )
-    
+
     resolver = DependencyResolver()
-    
+
     # First resolution
     resolved1 = resolver.resolve(manifest1)
     assert len(resolved1) == 1
-    
+
     # Second resolution should start fresh
     resolved2 = resolver.resolve(manifest2)
     assert len(resolved2) == 1
@@ -228,13 +228,13 @@ def test_resolver_state_reset():
 def test_build_subtree():
     """Test building dependency subtree"""
     resolver = DependencyResolver()
-    
+
     # Create some resolved packages
     pkg1 = ResolvedPackage("pkg1", "1.0.0", {"dep1": Dependency("dep1", "1.0.0")})
     pkg2 = ResolvedPackage("dep1", "1.0.0", {})
-    
+
     resolver.resolved = {"pkg1": pkg1, "dep1": pkg2}
-    
+
     subtree = resolver._build_subtree(pkg1)
     assert "dep1" in subtree
     assert subtree["dep1"]["version"] == "1.0.0"
@@ -243,11 +243,11 @@ def test_build_subtree():
 def test_dependency_tree_no_deps():
     """Test dependency tree with no dependencies"""
     manifest = PackageManifest(name="simple", version="1.0.0", dependencies={})
-    
+
     resolver = DependencyResolver()
     resolver.resolve(manifest)
     tree = resolver.get_dependency_tree(manifest)
-    
+
     assert tree == {}
 
 

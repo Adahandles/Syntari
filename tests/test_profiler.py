@@ -179,6 +179,7 @@ class TestProfiler:
         assert profiler.start_time is not None
 
         import time
+
         time.sleep(0.01)  # Small delay
         profiler.stop()
 
@@ -191,6 +192,7 @@ class TestProfiler:
 
         profiler.enter_function("test_func")
         import time
+
         time.sleep(0.01)
         profiler.exit_function()
 
@@ -331,20 +333,20 @@ class TestProfiler:
         """Test profile_interpreter main function"""
         from src.tools.profiler import profile_interpreter
         import tempfile
-        
+
         # Create a simple test file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.syn', delete=False) as f:
-            f.write('let x = 42\nx')
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".syn", delete=False) as f:
+            f.write("let x = 42\nx")
             temp_file = f.name
-        
+
         try:
             # Test with text format (default)
             profile_interpreter(temp_file, "text", None)
-            
+
             # Test with json format and output file
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as out:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as out:
                 output_file = out.name
-            
+
             try:
                 profile_interpreter(temp_file, "json", output_file)
                 assert Path(output_file).exists()

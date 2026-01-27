@@ -348,10 +348,10 @@ class TestDebuggerIntegration:
     def test_debugger_empty_command(self):
         """Test empty command"""
         debugger = SyntariDebugger(interactive=False)
-        
+
         # Set a previous command first
         debugger.last_command = "help"
-        
+
         # Should repeat last command without error
         try:
             debugger.process_command("")

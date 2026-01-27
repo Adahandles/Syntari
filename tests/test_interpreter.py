@@ -517,8 +517,8 @@ class TestEdgeCases:
 
     def test_string_variable(self):
         """Test string variables"""
-        source = '''let msg = "Hello"
-msg'''
+        source = """let msg = "Hello"
+msg"""
         result = run_code(source)
         assert result == "Hello"
 
