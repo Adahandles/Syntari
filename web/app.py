@@ -282,7 +282,19 @@ def get_client_ip(request) -> str:
 
 
 async def websocket_handler(request):
-    """Handle WebSocket connections for REPL"""
+    """Handle WebSocket connections for REPL
+    
+    Note: CSRF validation is not currently enforced on WebSocket connections.
+    This is an architectural decision that needs to be made based on:
+    1. Whether to validate at connection time or per-message
+    2. How clients will send CSRF tokens in WebSocket messages
+    3. Balance between security and usability for a development REPL
+    
+    For production deployments, consider adding CSRF validation by:
+    - Validating token during WebSocket handshake via query parameter
+    - Including token in each message and validating before execution
+    - Using session-based authentication instead of or in addition to CSRF
+    """
     ws = web.WebSocketResponse()
     await ws.prepare(request)
 
@@ -419,7 +431,7 @@ async def health_handler(request):
             "rate_limiting": "enabled",
             "session_management": "enabled",
             "resource_monitoring": "enabled",
-            "csrf_protection": "enabled",
+            "csrf_protection": "infrastructure_only",  # Token generation available, validation not enforced
             "security_headers": "enabled",
         }
     })
