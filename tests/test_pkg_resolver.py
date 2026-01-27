@@ -73,14 +73,13 @@ def test_dependency_tree():
 def test_version_constraint_caret():
     """Test caret version constraint resolution"""
     resolver = DependencyResolver()
-
     version = resolver._find_matching_version("test", "^1.2.3")
     assert version == "1.2.3"
 
 
 def test_version_constraint_wildcard():
     """Test wildcard version constraint"""
-
+    resolver = DependencyResolver()
     version = resolver._find_matching_version("test", "*")
     assert version is not None
 
