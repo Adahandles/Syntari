@@ -81,7 +81,6 @@ def test_version_constraint_caret():
 
 def test_version_constraint_wildcard():
     """Test wildcard version constraint"""
-    dep = Dependency("test", "*")
     resolver = DependencyResolver()
 
     version = resolver._find_matching_version("test", "*")
