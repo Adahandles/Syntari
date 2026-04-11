@@ -11,15 +11,13 @@ Features:
 - Conditional breakpoints
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Callable, Set
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Any
 from enum import Enum, auto
-import sys
 import traceback
-from pathlib import Path
 
 from src.interpreter.nodes import Node, Program
-from src.interpreter.interpreter import Interpreter, Environment
+from src.interpreter.interpreter import Interpreter
 
 
 class DebugCommand(Enum):
