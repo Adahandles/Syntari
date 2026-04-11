@@ -13,14 +13,12 @@ Provides IDE features:
 
 import json
 import sys
-from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
-import re
 
-from src.interpreter.lexer import tokenize, TokenType, Token, LexerError
+from src.interpreter.lexer import tokenize, LexerError
 from src.interpreter.parser import Parser, ParseError
-from src.interpreter.nodes import *
+from src.interpreter.nodes import Node, Program, FuncDecl, VarDecl
 
 
 @dataclass

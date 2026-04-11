@@ -16,7 +16,7 @@ Usage:
 import time
 import sys
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 from collections import defaultdict
 import json
 
@@ -271,7 +271,7 @@ class Profiler:
 <body>
     <div class="container">
         <h1>🚀 Syntari Performance Profile</h1>
-        
+
         <div class="stats">
             <div class="stat-box">
                 <div class="stat-label">Execution Time</div>
@@ -290,7 +290,7 @@ class Profiler:
                 <div class="stat-value">{(self.stats.total_instructions / self.stats.total_execution_time if self.stats.total_execution_time > 0 else 0):,.0f}</div>
             </div>
         </div>
-        
+
         <h2>Function Profile</h2>
         <table>
             <tr>
@@ -325,7 +325,7 @@ class Profiler:
 
         html += """
         </table>
-        
+
         <h2>Hot Lines</h2>
         <table>
             <tr>
@@ -351,7 +351,7 @@ class Profiler:
 
         html += """
         </table>
-        
+
         <h2>Opcode Statistics</h2>
         <table>
             <tr>
