@@ -2,9 +2,16 @@
 Syntari Interpreter - Executes Abstract Syntax Tree for v0.3
 """
 
+import uuid
 from typing import Any, Dict, List, Optional
 from src.interpreter.nodes import *
 from src.core import system, ai, net
+from src.core.chain_of_record import (
+    EventType,
+    NoOpAdapter,
+    RecorderAdapter,
+    _make_event,
+)
 
 
 class RuntimeError(Exception):
@@ -123,10 +130,12 @@ class Environment:
 class Interpreter:
     """Interprets and executes Syntari AST"""
 
-    def __init__(self):
+    def __init__(self, recorder: Optional[RecorderAdapter] = None):
         self.globals = Environment()
         self.environment = self.globals
         self.functions: Dict[str, FuncDecl] = {}
+        self._recorder: RecorderAdapter = recorder if recorder is not None else NoOpAdapter()
+        self._session_id: str = str(uuid.uuid4())
 
         # Register built-in functions
         self._register_builtins()
@@ -138,9 +147,25 @@ class Interpreter:
 
     def interpret(self, program: Program) -> Any:
         """Interpret a program"""
+        self._recorder.record(
+            _make_event(EventType.PROGRAM_START, self._session_id, {"session_id": self._session_id})
+        )
         result = None
-        for statement in program.statements:
-            result = self._execute(statement)
+        exc_info: Optional[str] = None
+        try:
+            for statement in program.statements:
+                result = self._execute(statement)
+        except Exception as exc:
+            exc_info = str(exc)
+            raise
+        finally:
+            self._recorder.record(
+                _make_event(
+                    EventType.PROGRAM_END,
+                    self._session_id,
+                    {"result": repr(result), "error": exc_info},
+                )
+            )
         return result
 
     def _execute(self, node: Node) -> Any:
@@ -198,12 +223,26 @@ class Interpreter:
         """Visit variable declaration"""
         value = self._evaluate(node.value)
         self.environment.define(node.name, value)
+        self._recorder.record(
+            _make_event(
+                EventType.VAR_ASSIGN,
+                self._session_id,
+                {"name": node.name, "value": repr(value), "kind": "declaration"},
+            )
+        )
         return None
 
     def visit_VarAssign(self, node: VarAssign) -> Any:
         """Visit variable assignment"""
         value = self._evaluate(node.value)
         self.environment.set(node.name, value)
+        self._recorder.record(
+            _make_event(
+                EventType.VAR_ASSIGN,
+                self._session_id,
+                {"name": node.name, "value": repr(value), "kind": "assignment"},
+            )
+        )
         return value
 
     # Expressions
@@ -379,10 +418,19 @@ class Interpreter:
                 f"Function {func.name} expects {len(func.params)} arguments, got {len(args)}"
             )
 
+        self._recorder.record(
+            _make_event(
+                EventType.FUNC_CALL,
+                self._session_id,
+                {"name": func.name, "args": [repr(a) for a in args]},
+            )
+        )
+
         # Create new environment for function
         previous = self.environment
         self.environment = Environment(self.globals)
 
+        return_value: Any = None
         try:
             # Bind parameters
             for param, arg in zip(func.params, args):
@@ -391,12 +439,20 @@ class Interpreter:
             # Execute function body
             try:
                 self._execute(func.body)
-                return None  # Implicit return None
             except ReturnValue as ret:
-                return ret.value
+                return_value = ret.value
         finally:
             # Restore environment
             self.environment = previous
+
+        self._recorder.record(
+            _make_event(
+                EventType.FUNC_RETURN,
+                self._session_id,
+                {"name": func.name, "return_value": repr(return_value)},
+            )
+        )
+        return return_value
 
     # Statements
     def visit_Print(self, node: Print) -> None:
@@ -680,7 +736,7 @@ class Interpreter:
         return True
 
 
-def interpret(program: Program) -> Any:
+def interpret(program: Program, recorder: Optional[RecorderAdapter] = None) -> Any:
     """Convenience function to interpret a program"""
-    interpreter = Interpreter()
+    interpreter = Interpreter(recorder=recorder)
     return interpreter.interpret(program)
