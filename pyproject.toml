@@ -51,6 +51,11 @@ Source = "https://github.com/Adahandles/Syntari"
 [project.scripts]
 syntari = "src.interpreter.main:main"
 
+[tool.setuptools.packages.find]
+# Include both the implementation packages (src.*) and the public API package
+# (syntari.*) so that `import syntari.api` works after installation.
+include = ["syntari*", "src*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
