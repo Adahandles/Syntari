@@ -202,7 +202,9 @@ class TestExecute:
     def test_custom_max_output_bytes(self):
         # Source that produces output; cap at 10 bytes
         result = api.execute('print("0123456789ABCDEFGHIJ");', {}, limits={"max_output_bytes": 10})
-        assert len(result["stdout"]) <= 10 + len("\n[output truncated]")
+        # The stdout must be capped: truncated content + truncation marker
+        assert "[output truncated]" in result["stdout"]
+        assert "0123456789" in result["stdout"]  # initial bytes preserved
 
     def test_empty_inputs(self):
         result = api.execute("let x = 42;", {})

@@ -22,7 +22,7 @@ import io
 import time
 import traceback
 from contextlib import redirect_stdout, redirect_stderr
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 __all__ = ["validate", "execute"]
 
@@ -33,8 +33,9 @@ __all__ = ["validate", "execute"]
 _DEFAULT_LIMITS: Dict[str, Any] = {
     "max_steps": 10_000,  # interpreter iterations
     "max_output_bytes": 65_536,  # 64 KB captured stdout
-    "timeout_seconds": 10,  # wall-clock budget (best-effort; not enforced via
-    # signal because we may run in a thread/async context)
+    # wall-clock budget (best-effort; not enforced via signal/alarm because
+    # we may run inside a thread or async event-loop where signals are unsafe)
+    "timeout_seconds": 10,
 }
 
 
@@ -66,7 +67,7 @@ def _collect_outputs(interp) -> Dict[str, Any]:
     try:
         env = interp.environment
         # Walk the environment chain from innermost to outermost
-        visited: set = set()
+        visited: Set[str] = set()
         while env is not None:
             for name, value in env.variables.items():
                 if name not in visited:
@@ -264,7 +265,13 @@ class _InMemoryRecorder:
     def __init__(self) -> None:
         self._events: List[Dict[str, Any]] = []
 
-    def record(self, event) -> None:  # event: ExecutionEvent
+    def record(self, event: Any) -> None:
+        """Append the serialised form of *event* to the in-memory list.
+
+        *event* is expected to be an ``ExecutionEvent`` instance (duck-typed
+        to avoid a circular import: ``src.core.chain_of_record`` is imported
+        lazily inside the interpreter).
+        """
         try:
             self._events.append(event.to_dict())
         except Exception:
