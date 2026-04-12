@@ -38,6 +38,11 @@ web = [
     "aiohttp>=3.13.0",
     "aiohttp-cors>=0.8.0",
 ]
+chain-of-record = [
+    # Future: "chain-of-record>=1.0.0",
+    # The built-in FileAdapter requires no extra dependencies.
+    # Install this group when the Chain-Of-Record service client is available.
+]
 
 [project.urls]
 Homepage = "https://github.com/Adahandles/Syntari"

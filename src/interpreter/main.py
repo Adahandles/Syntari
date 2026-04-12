@@ -88,13 +88,14 @@ def _validate_output_path(path: str, allowed_extensions: Optional[set] = None) -
         raise ValueError(f"Invalid output path: {e}")
 
 
-def run_file(path: str, verbose: bool = False) -> int:
+def run_file(path: str, verbose: bool = False, record_path: Optional[str] = None) -> int:
     """
     Run a Syntari source file
 
     Args:
         path: Path to .syn file
         verbose: Print verbose output
+        record_path: If set, write Chain-Of-Record execution events to this file.
 
     Returns:
         Exit code (0 for success, 1 for error)
@@ -120,8 +121,23 @@ def run_file(path: str, verbose: bool = False) -> int:
         if verbose:
             print(f"[Syntari] Parsed AST with {len(tree.statements)} statements")
 
+        # Set up optional Chain-Of-Record adapter
+        recorder = None
+        if record_path is not None:
+            from src.core.chain_of_record import FileAdapter
+
+            recorder = FileAdapter(record_path)
+            if verbose:
+                print(f"[Syntari] Recording execution events to: {record_path}")
+
         # Interpret
-        interpret(tree)
+        try:
+            interpret(tree, recorder=recorder)
+        finally:
+            if recorder is not None:
+                recorder.close()
+                if verbose:
+                    print(f"[Syntari] Wrote {recorder.events_written} events to {record_path}")
 
         return 0
 
@@ -354,6 +370,8 @@ Examples:
   syntari --debug script.syn      # Run with interactive debugger
   syntari --lsp                   # Start LSP server for IDE integration
   syntari --verbose script.syn    # Run with verbose output
+  syntari --record script.syn     # Record execution events (Chain-Of-Record)
+  syntari --record --record-output audit.jsonl script.syn  # Custom output file
         """,
     )
 
@@ -389,6 +407,19 @@ Examples:
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
 
     parser.add_argument("--version", action="version", version=f"Syntari v{VERSION}")
+
+    parser.add_argument(
+        "--record",
+        action="store_true",
+        help="Record execution events for Chain-Of-Record auditing",
+    )
+
+    parser.add_argument(
+        "--record-output",
+        default="execution_record.jsonl",
+        metavar="FILE",
+        help="Output file for Chain-Of-Record events (default: execution_record.jsonl)",
+    )
 
     args = parser.parse_args()
 
@@ -475,7 +506,8 @@ Examples:
         return run_bytecode(args.file, args.verbose)
 
     # Default: run source file
-    return run_file(args.file, args.verbose)
+    record_path = args.record_output if args.record else None
+    return run_file(args.file, args.verbose, record_path=record_path)
 
 
 if __name__ == "__main__":
