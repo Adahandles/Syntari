@@ -163,6 +163,10 @@ class FileAdapter(RecorderAdapter):
 
     def __init__(self, path: str) -> None:
         self._path = path
+        # The file handle is opened immediately so that any permission or I/O
+        # errors are raised at construction time rather than silently during
+        # recording. Callers must ensure close() is called (or use the context
+        # manager) to flush and release the handle.
         self._file = open(path, "a", encoding="utf-8")  # noqa: WPS515
         self._events_written = 0
 

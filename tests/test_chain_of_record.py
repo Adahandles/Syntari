@@ -218,7 +218,8 @@ class TestInterpreterRecording:
         """VAR_ASSIGN payload must include the assigned value representation."""
         events = self._captured("let x = 99;")
         assigns = [e for e in events if e.event_type == EventType.VAR_ASSIGN]
-        x_event = next(e for e in assigns if e.payload["name"] == "x")
+        x_event = next((e for e in assigns if e.payload["name"] == "x"), None)
+        assert x_event is not None, "Expected a VAR_ASSIGN event for variable 'x'"
         assert "99" in x_event.payload["value"]
 
     def test_func_call_event_emitted(self):
