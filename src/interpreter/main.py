@@ -281,7 +281,6 @@ def compile_file(source_path: str, output_path: Optional[str] = None, verbose: b
             validated_output = str(Path(validated_source).with_suffix(".sbc"))
 
         # Import bytecode compiler
-        import sys
         import os
 
         sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -328,7 +327,6 @@ def run_bytecode(path: str, verbose: bool = False) -> int:
         validated_path = _validate_file_path(path, allowed_extensions={".sbc"})
 
         # Import VM runtime
-        import sys
         import os
 
         sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))

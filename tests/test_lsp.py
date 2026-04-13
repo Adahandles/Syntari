@@ -427,5 +427,258 @@ class TestSyntariLSP:
         # May or may not find definition depending on implementation
 
 
+# ---------------------------------------------------------------------------
+# LSPServer – JSON-RPC message handling
+# ---------------------------------------------------------------------------
+
+
+class TestLSPServer:
+    """Tests for LSPServer JSON-RPC message handling."""
+
+    def _make_server(self):
+        from src.tools.lsp import LSPServer
+        return LSPServer()
+
+    def test_server_creation(self):
+        server = self._make_server()
+        assert server.running is False
+        assert server.lsp is not None
+
+    def test_handle_initialize(self):
+        server = self._make_server()
+        msg = {"method": "initialize", "id": 1, "params": {}}
+        resp = server.handle_message(msg)
+        assert resp is not None
+        assert resp["id"] == 1
+        assert "capabilities" in resp["result"]
+        assert "completionProvider" in resp["result"]["capabilities"]
+        assert "hoverProvider" in resp["result"]["capabilities"]
+
+    def test_handle_did_open(self, capsys):
+        server = self._make_server()
+        msg = {
+            "method": "textDocument/didOpen",
+            "params": {
+                "textDocument": {"uri": "file:///test.syn", "text": "let x = 5"}
+            },
+        }
+        resp = server.handle_message(msg)
+        assert resp is None
+        assert "file:///test.syn" in server.lsp.documents
+
+    def test_handle_did_change(self):
+        server = self._make_server()
+        # First open
+        server.handle_message({
+            "method": "textDocument/didOpen",
+            "params": {"textDocument": {"uri": "file:///test.syn", "text": "let x = 1"}},
+        })
+        # Then change
+        resp = server.handle_message({
+            "method": "textDocument/didChange",
+            "params": {
+                "textDocument": {"uri": "file:///test.syn"},
+                "contentChanges": [{"text": "let x = 99"}],
+            },
+        })
+        assert resp is None
+        assert server.lsp.documents["file:///test.syn"] == "let x = 99"
+
+    def test_handle_completion(self):
+        server = self._make_server()
+        server.lsp.did_open("file:///test.syn", "let x = 5")
+        msg = {
+            "method": "textDocument/completion",
+            "id": 2,
+            "params": {
+                "textDocument": {"uri": "file:///test.syn"},
+                "position": {"line": 0, "character": 0},
+            },
+        }
+        resp = server.handle_message(msg)
+        assert resp is not None
+        assert resp["id"] == 2
+        assert isinstance(resp["result"], list)
+        assert len(resp["result"]) > 0
+
+    def test_handle_hover(self):
+        server = self._make_server()
+        server.lsp.did_open("file:///test.syn", "let x = 5")
+        msg = {
+            "method": "textDocument/hover",
+            "id": 3,
+            "params": {
+                "textDocument": {"uri": "file:///test.syn"},
+                "position": {"line": 0, "character": 1},
+            },
+        }
+        resp = server.handle_message(msg)
+        assert resp is not None
+        assert resp["id"] == 3
+
+    def test_handle_hover_no_result(self):
+        server = self._make_server()
+        server.lsp.did_open("file:///test.syn", "")
+        msg = {
+            "method": "textDocument/hover",
+            "id": 4,
+            "params": {
+                "textDocument": {"uri": "file:///test.syn"},
+                "position": {"line": 0, "character": 0},
+            },
+        }
+        resp = server.handle_message(msg)
+        assert resp is not None
+        assert resp["id"] == 4
+
+    def test_handle_definition(self):
+        server = self._make_server()
+        server.lsp.did_open("file:///test.syn", "let x = 5\nx")
+        msg = {
+            "method": "textDocument/definition",
+            "id": 5,
+            "params": {
+                "textDocument": {"uri": "file:///test.syn"},
+                "position": {"line": 1, "character": 0},
+            },
+        }
+        resp = server.handle_message(msg)
+        assert resp is not None
+        assert resp["id"] == 5
+
+    def test_handle_document_symbols(self):
+        server = self._make_server()
+        server.lsp.did_open("file:///test.syn", "fn foo() { return 1 }")
+        msg = {
+            "method": "textDocument/documentSymbol",
+            "id": 6,
+            "params": {
+                "textDocument": {"uri": "file:///test.syn"},
+            },
+        }
+        resp = server.handle_message(msg)
+        assert resp is not None
+        assert resp["id"] == 6
+        assert isinstance(resp["result"], list)
+
+    def test_handle_formatting_with_content(self):
+        server = self._make_server()
+        server.lsp.did_open("file:///test.syn", "fn main() {\nlet x = 5\n}")
+        msg = {
+            "method": "textDocument/formatting",
+            "id": 7,
+            "params": {
+                "textDocument": {"uri": "file:///test.syn"},
+            },
+        }
+        resp = server.handle_message(msg)
+        assert resp is not None
+        assert resp["id"] == 7
+
+    def test_handle_formatting_empty_document(self):
+        server = self._make_server()
+        server.lsp.did_open("file:///test.syn", "")
+        msg = {
+            "method": "textDocument/formatting",
+            "id": 8,
+            "params": {
+                "textDocument": {"uri": "file:///test.syn"},
+            },
+        }
+        resp = server.handle_message(msg)
+        assert resp is not None
+        assert resp["id"] == 8
+
+    def test_handle_shutdown(self):
+        server = self._make_server()
+        server.running = True
+        msg = {"method": "shutdown", "id": 9, "params": {}}
+        resp = server.handle_message(msg)
+        assert resp is not None
+        assert resp["id"] == 9
+        assert server.running is False
+
+    def test_handle_unknown_method_returns_none(self):
+        server = self._make_server()
+        msg = {"method": "unknownMethod/doSomething", "id": 10, "params": {}}
+        resp = server.handle_message(msg)
+        assert resp is None
+
+    def test_send_response(self, capsys):
+        server = self._make_server()
+        response = {"jsonrpc": "2.0", "id": 1, "result": "ok"}
+        server.send_response(response)
+        captured = capsys.readouterr()
+        assert "Content-Length:" in captured.out
+        assert "ok" in captured.out
+
+    def test_send_error(self, capsys):
+        server = self._make_server()
+        server.send_error(-32700, "Parse error")
+        captured = capsys.readouterr()
+        assert "Content-Length:" in captured.out
+        assert "Parse error" in captured.out
+
+    def test_publish_diagnostics(self, capsys):
+        server = self._make_server()
+        server.lsp.did_open("file:///test.syn", "let x = 5")
+        server.publish_diagnostics("file:///test.syn")
+        captured = capsys.readouterr()
+        assert "publishDiagnostics" in captured.out
+
+    def test_start_stops_on_eof(self):
+        """Start loop reads header; empty line → break."""
+        import io
+        from unittest.mock import patch
+
+        server = self._make_server()
+        fake_stdin = io.StringIO("")  # empty → readline returns ""
+        with patch("sys.stdin", fake_stdin):
+            server.start()
+        # The server exits the loop when readline returns empty string;
+        # running may still be True since only shutdown sets it False.
+
+    def test_start_handles_keyboard_interrupt(self):
+        """Start loop handles KeyboardInterrupt gracefully."""
+        import io
+        from unittest.mock import patch, MagicMock
+
+        server = self._make_server()
+        # First readline raises KeyboardInterrupt
+        mock_stdin = MagicMock()
+        mock_stdin.readline.side_effect = KeyboardInterrupt
+        with patch("sys.stdin", mock_stdin):
+            server.start()
+
+    def test_start_skips_non_content_length_header(self):
+        """Start loop skips unrecognized headers."""
+        import io
+        from unittest.mock import patch
+
+        server = self._make_server()
+        # Send an unrecognized header then empty line to break
+        lines = iter(["X-Unknown: value\n", "\n"])
+        mock_stdin = __import__("io").StringIO("X-Unknown: value\n\n")
+        # Override to return lines then empty
+        inputs = ["X-Unknown: value", ""]
+
+        call_count = [0]
+
+        def fake_readline():
+            i = call_count[0]
+            call_count[0] += 1
+            if i < len(inputs):
+                return inputs[i]
+            return ""
+
+        from unittest.mock import patch, MagicMock
+
+        mock_stdin = MagicMock()
+        mock_stdin.readline.side_effect = fake_readline
+        with patch("sys.stdin", mock_stdin):
+            server.start()
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
