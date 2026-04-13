@@ -130,3 +130,4 @@ yarn.lock
 coverage.json
 htmlcov/
 .coverage
+*.jsonl
