@@ -36,7 +36,7 @@ dependencies = [
 [project.optional-dependencies]
 web = [
     "aiohttp>=3.13.0",
-    "aiohttp-cors>=0.8.0",
+    "aiohttp-cors>=0.8.1",
 ]
 chain-of-record = [
     # Future: "chain-of-record>=1.0.0",
